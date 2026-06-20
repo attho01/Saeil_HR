@@ -1,0 +1,6 @@
+{
+  "name": "여성새로일하기센터 자체 직원 채용 분석기",
+  "description": "새일센터 자체 직원 채용을 위한 공정하고 정밀한 서류 스크리닝 및 면접 설계 보조 도구입니다. 직무별 가중치, 신뢰도 하한 보정 및 보장, 미검증 항목 탐지, 법정보호 마스킹 대시보드를 지원합니다.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
