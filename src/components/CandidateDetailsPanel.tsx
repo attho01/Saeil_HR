@@ -315,32 +315,32 @@ export default function CandidateDetailsPanel({ candidate, centerInfo }: Candida
   );
 
   return (
-    <div className="bg-white text-slate-800 rounded-2xl border border-slate-150 shadow-sm overflow-hidden self-start" id="candidate-details-card">
+    <div className="bg-[#1f2226] text-slate-300 rounded border border-white/10 overflow-hidden self-start" id="candidate-details-card">
       {/* Header */}
-      <div className="p-6 bg-slate-50/60 border-b border-slate-100">
+      <div className="p-6 bg-[#292e35] border-b border-white/5">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center shadow-inner">
-              <User className="w-5 h-5 text-slate-950" />
+            <div className="w-10 h-10 rounded-full bg-[#1f2226] border border-white/10 flex items-center justify-center shadow-inner">
+              <User className="w-5 h-5 text-slate-300" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="font-sans font-extrabold text-slate-900 text-lg leading-tight">{candidate.name} 지원자</h2>
+                <h2 className="font-sans font-extrabold text-white text-lg leading-tight">{candidate.name} 지원자</h2>
                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                  candidate.tier === '적극검토' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/50' :
-                  candidate.tier === '검토(조건부)' ? 'bg-amber-50 text-amber-700 border border-amber-200/50' :
-                  'bg-slate-100 text-slate-600 border border-slate-200/50'
+                  candidate.tier === '적극검토' ? 'bg-[#8ac43f]/25 text-[#8ac43f] border border-[#8ac43f]/30' :
+                  candidate.tier === '검토(조건부)' ? 'bg-amber-500/20 text-amber-305 border border-amber-500/20' :
+                  'bg-slate-700/40 text-slate-300 border border-white/5'
                 }`}>
                   {candidate.tier}
                 </span>
               </div>
-              <p className="text-xs text-slate-500 mt-1 font-sans">{profile.jobTitle} 지원 ｜ 유형: <strong className="text-slate-950 font-bold">{candidate.candidateTypeLabel}</strong></p>
+              <p className="text-xs text-slate-400 mt-1 font-sans">{profile.jobTitle} 지원 ｜ 유형: <strong className="text-[#8ac43f] font-bold">{candidate.candidateTypeLabel}</strong></p>
             </div>
           </div>
           
           <div className="text-right sm:text-right">
             <span className="text-[10px] block text-slate-400 font-sans tracking-tight">수식 검증 종합 환산점수</span>
-            <div className="text-2xl font-mono font-extrabold text-slate-950">{audit.finalWithBonus.toFixed(1)}점</div>
+            <div className="text-2xl font-mono font-extrabold text-[#8ac43f]">{audit.finalWithBonus.toFixed(1)}점</div>
           </div>
         </div>
       </div>
@@ -348,21 +348,21 @@ export default function CandidateDetailsPanel({ candidate, centerInfo }: Candida
       <div className="p-6 space-y-6">
         
         {/* Audit Trail Line (감사 라인) */}
-        <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-3 font-mono">
-          <div className="flex items-center gap-2 text-xs font-bold text-slate-700 border-b border-slate-150 pb-2">
-            <ClipboardCheck className="w-4 h-4 text-emerald-650" />
-            <span className="font-sans">종합 점수 계산식 투명성 (감사 감사-라인)</span>
+        <div className="bg-[#292e35] p-4 rounded border border-white/5 space-y-3 font-mono">
+          <div className="flex items-center gap-2 text-xs font-bold text-[#8ac43f] border-b border-white/5 pb-2">
+            <ClipboardCheck className="w-4 h-4 text-[#8ac43f]" />
+            <span className="font-sans">종합 점수 계산식 투명성 (심사 감사-라인)</span>
           </div>
-          <div className="text-xs text-slate-600 leading-relaxed font-mono">
+          <div className="text-xs text-slate-300 leading-relaxed font-mono">
             {/* Display full formula with variables inserted */}
-            <p className="text-slate-550 text-[11px] mb-2 font-sans leading-normal">
+            <p className="text-slate-400 text-[11px] mb-2 font-sans leading-normal">
               수식: <code>종합점수 = (1차종합[{audit.perf1.toFixed(1)}] × {profile.ratioJobPerformance / 100}) + (2차조정[{audit.culture2Adjusted.toFixed(1)}] × {profile.ratioCultureSync / 100})</code>
             </p>
-            <div className="p-3.5 bg-slate-50 rounded-sm border border-slate-250 text-slate-950 font-sans">
-              <span className="font-mono font-semibold">({audit.perf1.toFixed(1)} × {profile.ratioJobPerformance / 100}) + ({audit.culture2Adjusted.toFixed(1)} × {profile.ratioCultureSync / 100}) = <span className="font-semibold text-slate-900 text-sm font-mono">{audit.finalBase.toFixed(1)}점</span></span>
+            <div className="p-3.5 bg-[#1f2226] rounded border border-white/5 text-slate-205 font-sans">
+              <span className="font-mono font-semibold">({audit.perf1.toFixed(1)} × {profile.ratioJobPerformance / 100}) + ({audit.culture2Adjusted.toFixed(1)} × {profile.ratioCultureSync / 100}) = <span className="font-semibold text-white text-sm font-mono">{audit.finalBase.toFixed(1)}점</span></span>
               {candidate.policyBonus > 0 && (
-                <span className="text-slate-650 text-xs block mt-1.5 pt-1.5 border-t border-slate-200/50 font-sans">
-                  기본 {audit.finalBase.toFixed(1)}점 + 법정 정책가점 {candidate.policyBonus}점 = <strong className="text-slate-950 text-sm font-mono">{audit.finalWithBonus.toFixed(1)}점</strong>
+                <span className="text-slate-400 text-xs block mt-1.5 pt-1.5 border-t border-white/5 font-sans">
+                  기본 {audit.finalBase.toFixed(1)}점 + 법정 정책가점 {candidate.policyBonus}점 = <strong className="text-[#8ac43f] text-sm font-mono">{audit.finalWithBonus.toFixed(1)}점</strong>
                 </span>
               )}
             </div>
@@ -370,11 +370,11 @@ export default function CandidateDetailsPanel({ candidate, centerInfo }: Candida
         </div>
 
         {/* Legal Protections & Masking Dashboard */}
-        <div className="p-4 bg-slate-50/50 border border-slate-100 rounded-xl space-y-3">
+        <div className="p-4 bg-[#292e35] border border-white/5 rounded space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Lock className="w-4 h-4 text-slate-950" />
-              <h3 className="text-xs font-extrabold text-slate-800 font-sans">법정 비수집 정보 마스킹 및 공정성 탐지</h3>
+              <Lock className="w-4 h-4 text-slate-300" />
+              <h3 className="text-xs font-extrabold text-slate-205 font-sans">법정 비수집 정보 마스킹 및 공정성 탐지</h3>
             </div>
             <span className="text-[10px] uppercase font-bold text-slate-400 font-mono tracking-wider">채용절차법 준수</span>
           </div>
@@ -382,26 +382,26 @@ export default function CandidateDetailsPanel({ candidate, centerInfo }: Candida
           {(candidate.maskingLogs || []).length > 0 ? (
             <div className="space-y-2">
               {(candidate.maskingLogs || []).map((log, idx) => (
-                <div key={idx} className="p-2.5 bg-white rounded-lg flex items-start gap-2 border border-slate-100 text-[11px] text-slate-500 font-sans leading-relaxed">
-                  <ShieldAlert className="w-3.5 h-3.5 text-amber-550 mt-0.5 shrink-0" />
+                <div key={idx} className="p-2.5 bg-[#1f2226] rounded flex items-start gap-2 border border-white/5 text-[11px] text-slate-400 font-sans leading-relaxed">
+                  <ShieldAlert className="w-3.5 h-3.5 text-amber-400 mt-0.5 shrink-0" />
                   <span>{log}</span>
                 </div>
               ))}
-              <div className="py-1 px-2.5 bg-slate-100 text-slate-950 border border-slate-250 rounded text-[10px] font-semibold text-center font-sans tracking-wide">
+              <div className="py-1 px-2.5 bg-[#2f353d] text-amber-300 border border-amber-500/20 rounded text-[10px] font-semibold text-center font-sans tracking-wide">
                 ⚠️ 공정채용에 저해되는 해당 정보는 기계적 파싱을 거쳐 완벽히 채점 배제 및 난화 처리되었습니다.
               </div>
             </div>
           ) : (
-            <p className="text-xs text-slate-500 italic pb-1 font-sans">탐지된 직무무관 의무 수집 개인정보가 없습니다. 깨끗한 원 서류 상태입니다.</p>
+            <p className="text-xs text-slate-450 italic pb-1 font-sans">탐지된 직무무관 의무 수집 개인정보가 없습니다. 깨끗한 원 서류 상태입니다.</p>
           )}
 
           {/* Career interruption check */}
-          <div className="pt-2 border-t border-slate-150 flex items-center justify-between text-xs font-sans">
-            <span className="text-slate-500 text-[11px]">수련 기회 확대 (경력단절 무감점 여부):</span>
+          <div className="pt-2 border-t border-white/5 flex items-center justify-between text-xs font-sans">
+            <span className="text-slate-400 text-[11px]">수련 기회 확대 (경력단절 무감점 여부):</span>
             <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${
               candidate.careerInterruptionFound 
-                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/50' 
-                : 'bg-slate-100 text-slate-500'
+                ? 'bg-[#8ac43f]/25 text-[#8ac43f] border border-[#8ac43f]/30' 
+                : 'bg-[#2f353d] text-slate-400 border border-white/5'
             }`}>
               {candidate.careerInterruptionFound ? "경력단절 무감점 보장 완료" : "공백 정보 미감지"}
             </span>
@@ -410,12 +410,12 @@ export default function CandidateDetailsPanel({ candidate, centerInfo }: Candida
 
         {/* Detailed Breakdown for 1차 Performace */}
         <div className="space-y-3">
-          <div className="flex justify-between items-center border-b border-slate-100 pb-1.5">
-            <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-500 flex items-center gap-1.5 font-sans">
-              <Briefcase className="w-4 h-4 text-emerald-600" />
+          <div className="flex justify-between items-center border-b border-white/5 pb-1.5">
+            <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-300 flex items-center gap-1.5 font-sans">
+              <Briefcase className="w-4 h-4 text-[#8ac43f]" />
               1차 직무수행 역량 세부
             </h3>
-            <span className="font-mono text-xs text-emerald-600 font-bold">{audit.perf1.toFixed(1)} / 100점</span>
+            <span className="font-mono text-xs text-[#8ac43f] font-bold">{audit.perf1.toFixed(1)} / 100점</span>
           </div>
 
           <div className={`grid grid-cols-1 gap-3 ${
@@ -423,91 +423,61 @@ export default function CandidateDetailsPanel({ candidate, centerInfo }: Candida
           }`}>
             {(centerInfo.requirements.coreCompetencies && centerInfo.requirements.coreCompetencies.length > 0
               ? centerInfo.requirements.coreCompetencies
-              : ["직무 전문성·자격", "행정·실무 역량", "구인처 개척ㆍ네트워킹"]
-            ).map((compName, idx, arr) => {
-              // Custom score rendering and label generator to align perfectly with the user selected items!
-              const getScoreForCompetencyLocal = (index: number, total: number) => {
-                if (total <= 1) {
-                  return Math.round(candidate.jobCompetencyScore);
-                }
-                if (total === 2) {
-                  return index === 0 ? Math.round(candidate.jobCompetencyScore) : Math.round(candidate.adminSkillsScore);
-                }
-                if (total === 3) {
-                  if (index === 0) return Math.round(candidate.jobCompetencyScore);
-                  if (index === 1) return Math.round(candidate.adminSkillsScore);
-                  return Math.round(candidate.networkingScore);
-                }
-                if (index === 0) {
-                  return Math.round(candidate.jobCompetencyScore);
-                }
-                if (index === total - 1) {
-                  return Math.round(candidate.networkingScore);
-                }
-                const fraction = index / (total - 1);
-                const interpolated = candidate.jobCompetencyScore * (1 - fraction) + candidate.networkingScore * fraction;
-                const baseScore = Math.round((interpolated + candidate.adminSkillsScore) / 2);
-                const hash = candidate.id.charCodeAt(index % candidate.id.length) % 5;
-                const finalVal = Math.max(50, Math.min(100, baseScore + (hash - 2)));
-                return finalVal;
+              : ["직무 전문성·자격", "행정·실무 역량", "구인처 개척ㆍ매칭"]
+            ).map((compName, idx) => {
+              let score = 0;
+              let weight = 0;
+              let sub = "기본역량";
+              if (idx === 0) {
+                score = candidate.jobCompetencyScore;
+                weight = profile.weightJobCompetency;
+                sub = `직무 전문성·자격 (${weight}%)`;
+              } else if (idx === 1) {
+                score = candidate.adminSkillsScore;
+                weight = profile.weightAdminSkills;
+                sub = `행정·실무 역량 (${weight}%)`;
+              } else {
+                score = candidate.networkingScore;
+                weight = profile.weightNetworking;
+                sub = `구인처 개척·네트워킹 (${weight}%)`;
+              }
+
+              const info = BUILTIN_COMPETENCY_INFO[compName] || {
+                description: centerInfo.requirements.coreCompetencyDescriptions?.[compName] || `여성새로일하기센터 ${compName}에 부합하는 종합 실무 직무 수행 능력`,
+                source: centerInfo.requirements.coreCompetencySources?.[compName] || "여가부 새일센터 공통 표준 역량지표"
               };
 
-              const getDetailsOfCompetencyLocal = (name: string, index: number, total: number) => {
-                const score = getScoreForCompetencyLocal(index, total);
-                let sub = `역량지표 #${index + 1}`;
-                
-                // Prioritize CenterInfo custom configuration, then BUILTIN_COMPETENCY_INFO, and lastly default placeholders
-                let desc = centerInfo.requirements.coreCompetencyDescriptions?.[name] 
-                  || BUILTIN_COMPETENCY_INFO[name]?.description 
-                  || `${name} 관련 역량 및 직무 부합도 분석`;
-                  
-                let source = centerInfo.requirements.coreCompetencySources?.[name] 
-                  || BUILTIN_COMPETENCY_INFO[name]?.source 
-                  || "";
-
-                if (name.includes("상담") || name.includes("진단") || name.includes("이력") || name.includes("구직")) {
-                  sub = "구직진단 · 실무상담";
-                } else if (name.includes("개척") || name.includes("네트워킹") || name.includes("취업지원") || name.includes("기업")) {
-                  sub = "구인개척 · 네트워킹";
-                } else if (name.includes("전산") || name.includes("워크넷") || name.includes("시스템") || name.includes("행정") || name.includes("문서") || name.includes("예산") || name.includes("정산")) {
-                  sub = "행정실무 · 전산";
-                } else if (name.includes("교육") || name.includes("기획") || name.includes("온보딩") || name.includes("훈련")) {
-                  sub = "교육기획 · 온보딩";
-                }
-
-                return { sub, desc, source, score };
-              };
-
-              const { sub, desc, source, score } = getDetailsOfCompetencyLocal(compName, idx, arr.length);
+              const desc = info.description;
+              const source = info.source;
               const evidenceQuote = findCandidateEvidenceForCompetency(candidate, compName);
 
               return (
-                <div key={idx} className="bg-slate-50/50 p-4 rounded-xl border border-slate-100 flex flex-col justify-between hover:bg-slate-100/40 transition">
+                <div key={idx} className="bg-[#292e35] p-4 rounded border border-white/5 flex flex-col justify-between hover:bg-[#292e35]/80 transition" id={`comp-card-${idx}`}>
                   <div>
-                    <div className="text-[10px] text-emerald-850 font-bold bg-emerald-50/50 self-start px-2 py-0.5 rounded border border-emerald-100/60 font-sans tracking-wide inline-block mb-1.5 leading-none">
+                    <div className="text-[10px] text-[#8ac43f] font-bold bg-[#8ac43f]/15 self-start px-2 py-0.5 rounded border border-[#8ac43f]/20 font-sans tracking-wide inline-block mb-1.5 leading-none">
                       {sub}
                     </div>
-                    <h4 className="text-sm font-sans font-extrabold text-slate-900 leading-snug break-keep">
+                    <h4 className="text-sm font-sans font-extrabold text-white leading-snug break-keep">
                       {compName}
                     </h4>
-                    <p className="text-xs text-slate-500 mt-1 pb-1.5 font-sans leading-normal">
+                    <p className="text-xs text-slate-350 mt-1 pb-1.5 font-sans leading-normal">
                       {desc}
                     </p>
                     {evidenceQuote ? (
-                      <div className="mt-2.5 bg-emerald-50/30 border border-emerald-100/50 rounded-lg p-2.5 text-[11px] font-sans text-slate-700 leading-normal flex flex-col gap-1 shadow-sm">
-                        <span className="text-[9px] text-emerald-700 font-bold tracking-wider uppercase">입사지원서·자기소개서 근거 발췌</span>
+                      <div className="mt-2.5 bg-[#1f2226] border border-white/5 rounded p-2.5 text-[11px] font-sans text-slate-300 leading-normal flex flex-col gap-1 shadow-sm">
+                        <span className="text-[9px] text-[#8ac43f] font-bold tracking-wider uppercase">입사지원서·자기소개서 근거 발췌</span>
                         <span className="break-all italic select-all leading-snug">{evidenceQuote}</span>
                       </div>
                     ) : source ? (
-                      <div className="mt-2.5 bg-slate-100/60 border border-slate-200/55 rounded-md px-2 py-1 text-[10px] font-sans text-slate-500 flex flex-col gap-0.5">
-                        <span className="text-slate-600 font-bold shrink-0 text-[9px] uppercase tracking-wider">업계 표준 근거</span>
+                      <div className="mt-2.5 bg-[#1f2226] border border-white/5 rounded px-2 py-1 text-[10px] font-sans text-slate-400 flex flex-col gap-0.5">
+                        <span className="text-slate-300 font-bold shrink-0 text-[9px] uppercase tracking-wider">업계 표준 근거</span>
                         <span className="break-all leading-snug">{source}</span>
                       </div>
                     ) : null}
                   </div>
-                  <div className="text-right mt-3 pt-2 border-t border-slate-100/50">
-                    <span className="text-[9px] text-slate-400 font-mono">획득점수</span>
-                    <div className="text-sm font-mono font-black text-slate-850">{score}점</div>
+                  <div className="text-right mt-3 pt-2 border-t border-white/5">
+                    <span className="text-[9px] text-slate-450 font-mono">획득점수</span>
+                    <div className="text-sm font-mono font-black text-[#8ac43f]">{score}점</div>
                   </div>
                 </div>
               );
@@ -517,35 +487,35 @@ export default function CandidateDetailsPanel({ candidate, centerInfo }: Candida
 
         {/* Detailed Breakdown for 2차 Adjusted (정성평가 신뢰도) */}
         <div className="space-y-3">
-          <div className="flex justify-between items-center border-b border-slate-100 pb-1.5">
-            <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-500 flex items-center gap-1.5 font-sans">
-              <Heart className="w-4 h-4 text-slate-950" />
+          <div className="flex justify-between items-center border-b border-white/5 pb-1.5">
+            <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-300 flex items-center gap-1.5 font-sans">
+              <Heart className="w-4 h-4 text-[#8ac43f]" />
               2차 조직적합도 및 신뢰도 처리 세부
             </h3>
-            <span className="font-mono text-xs text-slate-950 font-extrabold">{audit.culture2Adjusted.toFixed(1)} / 100점</span>
+            <span className="font-mono text-xs text-[#8ac43f] font-extrabold">{audit.culture2Adjusted.toFixed(1)} / 100점</span>
           </div>
 
           <div className="space-y-3">
             {/* Category 1: Civil complaints resilience */}
-            <div className="bg-slate-50/30 p-4 rounded-xl border border-slate-100 flex flex-col md:flex-row justify-between gap-4">
+            <div className="bg-[#292e35] p-4 rounded border border-white/5 flex flex-col md:flex-row justify-between gap-4" id="civil-complaints-card">
               <div className="space-y-1.5 flex-1">
-                <span className="text-xs font-bold text-slate-800 font-sans">공감력ㆍ민원 응대 태도</span>
-                <p className="text-xs text-slate-500 leading-normal font-sans font-medium">
+                <span className="text-xs font-bold text-white font-sans">공감력ㆍ민원 응대 태도</span>
+                <p className="text-xs text-slate-350 leading-normal font-sans font-medium">
                   강경 불만 민원에 맞서는 회복탄력성 및 감정 정비 역량
                 </p>
                 <div className="flex flex-wrap gap-2 pt-0.5 font-sans">
-                  <span className="text-[10px] bg-slate-100/80 text-slate-850 px-2 py-0.5 rounded-sm border border-slate-250">
+                  <span className="text-[10px] bg-[#1f2226] text-slate-300 px-2 py-0.5 rounded border border-white/5">
                     신뢰도: {candidate.civilConfidence}
                   </span>
-                  <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded border border-slate-200/50">
+                  <span className="text-[10px] bg-[#1f2226] text-slate-300 px-2 py-0.5 rounded border border-white/5">
                     근거유형: {candidate.civilEvidence}
                   </span>
                 </div>
                 {(() => {
                   const civilQuote = findCandidateEvidenceForCompetency(candidate, "", ["민원", "불만", "강경", "악성", "속상", "경청", "경청하는", "치유", "회복", "회복탄력성", "전화", "항의", "납득", "극복", "중재", "원만하게", "해소"]);
                   return (candidate.civilEvidence !== "부재" && civilQuote) ? (
-                    <div className="mt-2.5 bg-emerald-50/30 border border-emerald-100/55 rounded-lg p-2.5 text-[11px] font-sans text-slate-700 leading-normal flex flex-col gap-1 shadow-sm">
-                      <span className="text-[9px] text-emerald-700 font-bold tracking-wider uppercase">자기소개서 민원 해결 근거 발췌</span>
+                    <div className="mt-2.5 bg-[#1f2226] border border-white/5 rounded p-2.5 text-[11px] font-sans text-slate-300 leading-normal flex flex-col gap-1 shadow-sm">
+                      <span className="text-[9px] text-[#8ac43f] font-bold tracking-wider uppercase">자기소개서 민원 해결 근거 발췌</span>
                       <span className="break-all italic select-all leading-snug">{civilQuote}</span>
                     </div>
                   ) : null;
@@ -553,36 +523,36 @@ export default function CandidateDetailsPanel({ candidate, centerInfo }: Candida
 
                 {/* Selected Keywords evaluation item-by-item */}
                 {selectedCivilKeywords.length > 0 && (
-                  <div className="mt-5 border-t border-slate-200/80 pt-4 space-y-3">
-                    <div className="flex items-center gap-1.5 text-[11px] font-extrabold text-emerald-800 tracking-wider bg-emerald-50/70 py-1.5 px-3 rounded-lg border border-emerald-100/60 w-fit">
-                      <CheckSquare className="w-3.5 h-3.5 text-emerald-600" />
+                  <div className="mt-5 border-t border-white/5 pt-4 space-y-3">
+                    <div className="flex items-center gap-1.5 text-[11px] font-extrabold text-[#8ac43f] tracking-wider bg-[#8ac43f]/15 py-1.5 px-3 rounded border border-white/5 w-fit">
+                      <CheckSquare className="w-3.5 h-3.5 text-[#8ac43f]" />
                       <span>민원 응대 및 공감 - 인성 역량 세부 검증</span>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-3">
                       {selectedCivilKeywords.map(keyword => {
                         const { isMatched, evidenceQuote } = evaluateKeywordMatch(candidate, keyword);
                         return (
-                          <div key={keyword} className={`relative overflow-hidden rounded-xl border p-3.5 transition-all duration-200 ${
+                          <div key={keyword} className={`relative overflow-hidden rounded border p-3.5 transition-all duration-200 ${
                             isMatched 
-                              ? "bg-white border-emerald-200/80 shadow-xs shadow-emerald-50/10" 
-                              : "bg-slate-50/65 border-slate-200/80"
-                          }`}>
+                              ? "bg-[#1f2226] border-[#8ac43f]/30 shadow-xs shadow-[#8ac43f]/5" 
+                              : "bg-[#2f353d] border-white/5"
+                          }`} id={`civil-keyword-${keyword}`}>
                             {isMatched && (
-                              <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500" />
+                              <div className="absolute top-0 left-0 w-1 h-full bg-[#8ac43f]" />
                             )}
-                            <div className="flex items-center justify-between gap-2 mb-2 pb-1.5 border-b border-dashed border-slate-200/60">
+                            <div className="flex items-center justify-between gap-2 mb-2 pb-1.5 border-b border-dashed border-white/10">
                               <div className="flex items-center gap-1.5">
-                                <span className={`w-1.5 h-1.5 rounded-full ${isMatched ? "bg-emerald-500" : "bg-slate-400"}`} />
-                                <span className="font-extrabold text-slate-800 text-xs">{keyword}</span>
+                                <span className={`w-1.5 h-1.5 rounded-full ${isMatched ? "bg-[#8ac43f]" : "bg-slate-500"}`} />
+                                <span className="font-extrabold text-slate-200 text-xs">{keyword}</span>
                               </div>
                               <div className={`text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1 ${
                                 isMatched 
-                                  ? "bg-emerald-50 text-emerald-700 border border-emerald-150" 
-                                  : "bg-slate-200/50 text-slate-500 border border-slate-200"
+                                  ? "bg-[#8ac43f]/25 text-[#8ac43f] border border-[#8ac43f]/30" 
+                                  : "bg-[#2f353d] text-slate-400 border border-white/10"
                               }`}>
                                 {isMatched ? (
                                   <>
-                                    <span className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
+                                    <span className="w-1 h-1 rounded-full bg-[#8ac43f] animate-pulse" />
                                     <span>자기소개서 기재됨</span>
                                   </>
                                 ) : (
@@ -593,14 +563,14 @@ export default function CandidateDetailsPanel({ candidate, centerInfo }: Candida
                               </div>
                             </div>
                             {isMatched && evidenceQuote ? (
-                              <div className="bg-emerald-50/35 border border-emerald-100/50 rounded-lg p-2 text-[11px] font-sans text-slate-700 leading-relaxed shadow-xs">
-                                <div className="text-[9px] text-emerald-700 font-extrabold tracking-widest uppercase mb-1">인성 우수 발췌 근거</div>
+                              <div className="bg-[#292e35] border border-white/5 rounded p-2 text-[11px] font-sans text-slate-300 leading-relaxed shadow-xs">
+                                <div className="text-[9px] text-[#8ac43f] font-extrabold tracking-widest uppercase mb-1">인성 우수 발췌 근거</div>
                                 <p className="break-all italic leading-relaxed select-all">
                                   "… {evidenceQuote.trim()} …"
                                 </p>
                               </div>
                             ) : (
-                              <p className="text-[11px] text-slate-450 mt-1 leading-normal italic">
+                              <p className="text-[11px] text-slate-400 mt-1 leading-normal italic">
                                 서류상 관련 키워드가 발견되지 않아, 면접 시 적격 여부 확인을 권장합니다.
                               </p>
                             )}
@@ -611,77 +581,77 @@ export default function CandidateDetailsPanel({ candidate, centerInfo }: Candida
                   </div>
                 )}
               </div>
- 
-               <div className="text-right sm:text-right shrink-0">
-                 <div className="text-[10px] text-slate-400 font-sans">원점 {candidate.civilScoreRaw}점 → 조정</div>
-                 <div className="text-base font-mono font-extrabold text-slate-950">
-                   {audit.civilAdjusted.toFixed(1)}점
-                 </div>
-                 <span className="text-[9px] text-amber-700 block font-sans">
-                   {evaluateAdjustedScore(candidate.civilScoreRaw, candidate.civilEvidence, candidate.civilConfidence).description}
-                 </span>
-               </div>
-             </div>
- 
-             {/* Category 2: Core Values ethics and collaboration */}
-             <div className="bg-slate-50/30 p-4 rounded-xl border border-slate-100 flex flex-col md:flex-row justify-between gap-4">
-               <div className="space-y-1.5 flex-1">
-                 <span className="text-xs font-bold text-slate-800 font-sans">
-                   {profile.jobType === '관리직' ? '리더십ㆍ가치관 및 조직 관리' : '가치관ㆍ소통ㆍ기본 협력'}
-                 </span>
-                 <p className="text-xs text-slate-500 leading-normal font-sans font-medium">
-                   새일센터 취업지원 비전에 향한 공헌 자질 및 직업 사명감
-                 </p>
-                 <div className="flex flex-wrap gap-2 pt-0.5 font-sans">
-                   <span className="text-[10px] bg-slate-100/80 text-slate-850 px-2 py-0.5 rounded-sm border border-slate-250">
-                     신뢰도: {candidate.cultureConfidence}
-                   </span>
-                   <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded border border-slate-200/50">
-                     근거유형: {candidate.cultureEvidence}
-                   </span>
-                 </div>
-                 {(() => {
-                   const cultureQuote = findCandidateEvidenceForCompetency(candidate, "", ["사명감", "새일", "신뢰", "공감", "여성", "협업", "팀원", "협력", "희생", "배려", "소통", "협력적", "팀워크", "나누며", "동료", "멘토링", "인성", "리더십"]);
-                   return (candidate.cultureEvidence !== "부재" && cultureQuote) ? (
-                     <div className="mt-2.5 bg-emerald-50/30 border border-emerald-100/55 rounded-lg p-2.5 text-[11px] font-sans text-slate-700 leading-normal flex flex-col gap-1 shadow-sm">
-                       <span className="text-[9px] text-emerald-700 font-bold tracking-wider uppercase">자기소개서 사명감 및 협업 근거 발췌</span>
-                       <span className="break-all italic select-all leading-snug">{cultureQuote}</span>
-                     </div>
-                   ) : null;
-                 })()}
+
+              <div className="text-right sm:text-right shrink-0">
+                <div className="text-[10px] text-slate-400 font-sans">원점 {candidate.civilScoreRaw}점 → 조정</div>
+                <div className="text-base font-mono font-extrabold text-[#8ac43f]">
+                  {audit.civilAdjusted.toFixed(1)}점
+                </div>
+                <span className="text-[9px] text-amber-305 block font-sans">
+                  {evaluateAdjustedScore(candidate.civilScoreRaw, candidate.civilEvidence, candidate.civilConfidence).description}
+                </span>
+              </div>
+            </div>
+
+            {/* Category 2: Core Values ethics and collaboration */}
+            <div className="bg-[#292e35] p-4 rounded border border-white/5 flex flex-col md:flex-row justify-between gap-4" id="values-collaboration-card">
+              <div className="space-y-1.5 flex-1">
+                <span className="text-xs font-bold text-white font-sans">
+                  {profile.jobType === '관리직' ? '리더십ㆍ가치관 및 조직 관리' : '가치관ㆍ소통ㆍ기본 협력'}
+                </span>
+                <p className="text-xs text-slate-350 leading-normal font-sans font-medium">
+                  새일센터 취업지원 비전에 향한 공헌 자질 및 직업 사명감
+                </p>
+                <div className="flex flex-wrap gap-2 pt-0.5 font-sans">
+                  <span className="text-[10px] bg-[#1f2226] text-slate-300 px-2 py-0.5 rounded border border-white/5">
+                    신뢰도: {candidate.cultureConfidence}
+                  </span>
+                  <span className="text-[10px] bg-[#1f2226] text-slate-300 px-2 py-0.5 rounded border border-white/5">
+                    근거유형: {candidate.cultureEvidence}
+                  </span>
+                </div>
+                {(() => {
+                  const cultureQuote = findCandidateEvidenceForCompetency(candidate, "", ["사명감", "새일", "신뢰", "공감", "여성", "협업", "팀원", "협력", "희생", "배려", "소통", "협력적", "팀워크", "나누며", "동료", "멘토링", "인성", "리더십"]);
+                  return (candidate.cultureEvidence !== "부재" && cultureQuote) ? (
+                    <div className="mt-2.5 bg-[#1f2226] border border-white/5 rounded p-2.5 text-[11px] font-sans text-slate-300 leading-normal flex flex-col gap-1 shadow-sm">
+                      <span className="text-[9px] text-[#8ac43f] font-bold tracking-wider uppercase">자기소개서 사명감 및 협업 근거 발췌</span>
+                      <span className="break-all italic select-all leading-snug">{cultureQuote}</span>
+                    </div>
+                  ) : null;
+                })()}
 
                 {/* Selected Keywords evaluation item-by-item */}
                 {selectedCultureKeywords.length > 0 && (
-                  <div className="mt-5 border-t border-slate-200/80 pt-4 space-y-3">
-                    <div className="flex items-center gap-1.5 text-[11px] font-extrabold text-indigo-900 tracking-wider bg-indigo-50/70 py-1.5 px-3 rounded-lg border border-indigo-100/60 w-fit">
-                      <CheckSquare className="w-3.5 h-3.5 text-indigo-600" />
+                  <div className="mt-5 border-t border-white/5 pt-4 space-y-3">
+                    <div className="flex items-center gap-1.5 text-[11px] font-extrabold text-[#8ac43f] tracking-wider bg-[#8ac43f]/15 py-1.5 px-3 rounded border border-white/5 w-fit">
+                      <CheckSquare className="w-3.5 h-3.5 text-[#8ac43f]" />
                       <span>{profile.jobType === '관리직' ? '조직 관리 및 리더십 - 인성 역량 세부 검증' : '가치관 및 협업 - 인성 역량 세부 검증'}</span>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-3">
                       {selectedCultureKeywords.map(keyword => {
                         const { isMatched, evidenceQuote } = evaluateKeywordMatch(candidate, keyword);
                         return (
-                          <div key={keyword} className={`relative overflow-hidden rounded-xl border p-3.5 transition-all duration-200 ${
+                          <div key={keyword} className={`relative overflow-hidden rounded border p-3.5 transition-all duration-200 ${
                             isMatched 
-                              ? "bg-white border-indigo-200/80 shadow-xs shadow-indigo-50/10" 
-                              : "bg-slate-50/65 border-slate-200/80"
-                          }`}>
+                              ? "bg-[#1f2226] border-[#8ac43f]/30 shadow-xs shadow-[#8ac43f]/5" 
+                              : "bg-[#2f353d] border-white/5"
+                          }`} id={`culture-keyword-${keyword}`}>
                             {isMatched && (
-                              <div className="absolute top-0 left-0 w-1 h-full bg-indigo-500" />
+                              <div className="absolute top-0 left-0 w-1 h-full bg-[#8ac43f]" />
                             )}
-                            <div className="flex items-center justify-between gap-2 mb-2 pb-1.5 border-b border-dashed border-slate-200/60">
+                            <div className="flex items-center justify-between gap-2 mb-2 pb-1.5 border-b border-dashed border-white/10">
                               <div className="flex items-center gap-1.5">
-                                <span className={`w-1.5 h-1.5 rounded-full ${isMatched ? "bg-indigo-500" : "bg-slate-400"}`} />
-                                <span className="font-extrabold text-slate-800 text-xs">{keyword}</span>
+                                <span className={`w-1.5 h-1.5 rounded-full ${isMatched ? "bg-[#8ac43f]" : "bg-slate-500"}`} />
+                                <span className="font-extrabold text-slate-200 text-xs">{keyword}</span>
                               </div>
                               <div className={`text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1 ${
                                 isMatched 
-                                  ? "bg-indigo-50 text-indigo-700 border border-indigo-150" 
-                                  : "bg-slate-200/50 text-slate-500 border border-slate-200"
+                                  ? "bg-[#8ac43f]/25 text-[#8ac43f] border border-[#8ac43f]/30" 
+                                  : "bg-[#2f353d] text-slate-400 border border-white/10"
                               }`}>
                                 {isMatched ? (
                                   <>
-                                    <span className="w-1 h-1 rounded-full bg-indigo-500 animate-pulse" />
+                                    <span className="w-1 h-1 rounded-full bg-[#8ac43f] animate-pulse" />
                                     <span>자기소개서 기재됨</span>
                                   </>
                                 ) : (
@@ -692,14 +662,14 @@ export default function CandidateDetailsPanel({ candidate, centerInfo }: Candida
                               </div>
                             </div>
                             {isMatched && evidenceQuote ? (
-                              <div className="bg-indigo-50/35 border border-indigo-100/50 rounded-lg p-2 text-[11px] font-sans text-slate-700 leading-relaxed shadow-xs">
-                                <div className="text-[9px] text-indigo-700 font-extrabold tracking-widest uppercase mb-1">인성 우수 발췌 근거</div>
+                              <div className="bg-[#292e35] border border-white/5 rounded p-2 text-[11px] font-sans text-slate-300 leading-relaxed shadow-xs">
+                                <div className="text-[9px] text-[#8ac43f] font-extrabold tracking-widest uppercase mb-1">인성 우수 발췌 근거</div>
                                 <p className="break-all italic leading-relaxed select-all">
                                   "… {evidenceQuote.trim()} …"
                                 </p>
                               </div>
                             ) : (
-                              <p className="text-[11px] text-slate-450 mt-1 leading-normal italic">
+                              <p className="text-[11px] text-slate-400 mt-1 leading-normal italic">
                                 서류상 관련 키워드가 발견되지 않아, 면접 시 적격 여부 확인을 권장합니다.
                               </p>
                             )}
@@ -709,14 +679,14 @@ export default function CandidateDetailsPanel({ candidate, centerInfo }: Candida
                     </div>
                   </div>
                 )}
-               </div>
+              </div>
 
               <div className="text-right sm:text-right shrink-0">
                 <div className="text-[10px] text-slate-400 font-sans">원점 {candidate.cultureScoreRaw}점 → 조정</div>
-                <div className="text-base font-mono font-extrabold text-slate-950">
+                <div className="text-base font-mono font-extrabold text-[#8ac43f]">
                   {audit.cultureAdjusted.toFixed(1)}점
                 </div>
-                <span className="text-[9px] text-amber-700 block font-sans">
+                <span className="text-[9px] text-amber-305 block font-sans">
                   {evaluateAdjustedScore(candidate.cultureScoreRaw, candidate.cultureEvidence, candidate.cultureConfidence).description}
                 </span>
               </div>
@@ -726,26 +696,26 @@ export default function CandidateDetailsPanel({ candidate, centerInfo }: Candida
 
         {/* Key Narrative Comment */}
         <div className="space-y-2">
-          <h4 className="text-xs font-bold text-slate-500 font-sans">종합 진단 요약 및 한술평</h4>
-          <div className="p-4 bg-slate-50 border border-slate-200 rounded-sm space-y-1.5">
-            <p className="text-sm font-extrabold text-slate-900 font-sans">"{candidate.oneLineComment}"</p>
-            <p className="text-xs text-slate-650 leading-relaxed font-sans">{candidate.longComments}</p>
+          <h4 className="text-xs font-bold text-slate-400 font-sans">종합 진단 요약 및 한술평</h4>
+          <div className="p-4 bg-[#292e35] border border-white/5 rounded space-y-1.5">
+            <p className="text-sm font-extrabold text-white font-sans">"{candidate.oneLineComment}"</p>
+            <p className="text-xs text-slate-350 leading-relaxed font-sans">{candidate.longComments}</p>
           </div>
         </div>
 
         {/* Section 5: Customized Interview Critical Questions */}
         <div className="space-y-4" id="critical-questions-section">
-          <div className="border-b border-slate-200 pb-2.5 flex items-center justify-between">
+          <div className="border-b border-white/10 pb-2.5 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <HelpCircle className="w-5 h-5 text-indigo-600" />
-              <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-500 font-sans">
+              <HelpCircle className="w-5 h-5 text-[#8ac43f]" />
+              <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-300 font-sans">
                 💡 5대 심층 검증 면접 필수 질문 (Critical Questions)
               </h3>
             </div>
-            <span className="text-[10px] text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full font-sans font-medium">직무·인성 매칭형</span>
+            <span className="text-[10px] text-slate-300 bg-[#292e35] px-2 py-0.5 rounded-full border border-white/5 font-sans font-medium">직무·인성 매칭형</span>
           </div>
 
-          <p className="text-xs text-slate-500 leading-normal font-sans -mt-1.5">
+          <p className="text-xs text-slate-400 leading-normal font-sans -mt-1.5">
             자기소개서 발췌 분석 결과 및 성격 키워드 검증 현황을 바탕으로 설계된 맞춤형 면접 구술 질문 리스트입니다. 실무 역량 검증과 허위 기재 방지 및 감정 적응 노하우를 정밀 평가할 수 있습니다.
           </p>
 
@@ -758,8 +728,8 @@ export default function CandidateDetailsPanel({ candidate, centerInfo }: Candida
                 {
                   num: "1",
                   tag: "직무 기술 및 매칭",
-                  badgeColor: "bg-teal-50 border-teal-150 text-teal-800",
-                  lineColor: "bg-teal-500",
+                  badgeColor: "bg-[#8ac43f]/15 border-[#8ac43f]/30 text-[#8ac43f]",
+                  lineColor: "bg-[#8ac43f]",
                   title: `${profile.jobTitle || '직무'} 현업 이해도 및 상황 제어 능력`,
                   question: candidate.interviewQuestions?.jobAdmin?.[0] || `이전 직장에서 ${profile.jobTitle || '유관 직무'} 관련 중요 프로젝트나 구직 중개 활동을 수행하는 도중 발생했던 가장 까다로운 조율 갈등은 부서 간 혹은 기업체 관계자와 어떻게 조율하셨습니까?`,
                   checkpoint: "지원 무대와 관련된 실제 유사 경험의 기재 무오류성 및 주도성 척도 점검"
@@ -767,7 +737,7 @@ export default function CandidateDetailsPanel({ candidate, centerInfo }: Candida
                 {
                   num: "2",
                   tag: "기안 및 회계",
-                  badgeColor: "bg-amber-50 border-amber-100 text-amber-800",
+                  badgeColor: "bg-amber-500/20 border-amber-500/30 text-amber-300",
                   lineColor: "bg-amber-500",
                   title: "공공 보조금 무결성 정산 및 회계 무오류 마인드",
                   question: candidate.interviewQuestions?.jobAdmin?.[1] || `여가부/노동부 지원 예산과 새일센터의 보조금 회계 정산은 10원의 영수증 불일치도 큰 법정 감사를 유발합니다. 정산 마감 전 발생한 오류를 직접 바로잡았던 경험이나 본인만의 검증 원칙이 있다면 구체적으로 설명해 주세요.`,
@@ -776,8 +746,8 @@ export default function CandidateDetailsPanel({ candidate, centerInfo }: Candida
                 {
                   num: "3",
                   tag: "내담자 민원 응대",
-                  badgeColor: "bg-rose-50 border-rose-100 text-rose-800",
-                  lineColor: "bg-rose-500",
+                  badgeColor: "bg-rose-500/20 border-rose-500/30 text-rose-300",
+                  lineColor: "bg-rose-505",
                   title: "악성 수위 민원 우회 및 감정 회복 탄력성",
                   question: candidate.interviewQuestions?.civilCulture?.[0] || `새일센터를 찾는 여성 내담자 중에는 오랜 단절로 고도로 날카로워져 불합리한 처우 주장이나 고성을 지르는 경우가 발생할 수 있습니다. 이를 가이드하는 방법과 본인의 감정 스트레스 회복탄력성 조절 메커니즘을 들려주세요.`,
                   checkpoint: "BARS 공감 응대 구간 우수성, 장기 근속을 가능케 하는 스트레스 무력화 능력"
@@ -785,8 +755,8 @@ export default function CandidateDetailsPanel({ candidate, centerInfo }: Candida
                 {
                   num: "4",
                   tag: unverifiedKeywords.length > 0 ? "미기재 성향 보완" : "기재 진위 교차 검증",
-                  badgeColor: unverifiedKeywords.length > 0 ? "bg-purple-50 border-purple-100 text-purple-800" : "bg-sky-50 border-sky-100 text-sky-800",
-                  lineColor: unverifiedKeywords.length > 0 ? "bg-purple-500" : "bg-sky-500",
+                  badgeColor: unverifiedKeywords.length > 0 ? "bg-purple-500/20 border-purple-500/30 text-purple-300" : "bg-sky-500/20 border-sky-500/30 text-sky-350",
+                  lineColor: "bg-sky-500",
                   title: unverifiedKeywords.length > 0 
                     ? `자기소개서 미기재 인성 키워드 [${unverifiedKeywords.join(", ")}]의 정밀 검증` 
                     : `소개서 상 강점 표현의 실제 발현 내역 교차 질문`,
@@ -798,8 +768,8 @@ export default function CandidateDetailsPanel({ candidate, centerInfo }: Candida
                 {
                   num: "5",
                   tag: "가치관 및 사명감",
-                  badgeColor: "bg-indigo-50 border-indigo-150 text-indigo-800",
-                  lineColor: "bg-indigo-500",
+                  badgeColor: "bg-[#8ac43f]/15 border-[#8ac43f]/30 text-[#8ac43f]",
+                  lineColor: "bg-[#8ac43f]",
                   title: "여성 일자리 창출 헌신 사명감 및 비전 정렬",
                   question: candidate.interviewQuestions?.unverified?.[0] || `경력단절 여성의 삶을 단순히 행정적 '구직 건수'로 처리하지 않고 정서적이고 실무적으로 견인해야 함에 따라 소명의식이 필수적입니다. 본인이 새 일자리 제공 현장에서 투영하고자 하는 철학을 한 말씀 듣고 싶습니다.`,
                   checkpoint: "새일센터의 공익적 사명 지향성 일치 레벨과 연차별 장기 근무 적격성 평가"
@@ -809,34 +779,34 @@ export default function CandidateDetailsPanel({ candidate, centerInfo }: Candida
               return (
                 <div className="grid grid-cols-1 gap-3.5">
                   {questionsList.map((q) => (
-                    <div key={q.num} className="relative overflow-hidden rounded-xl border border-slate-200 bg-white hover:border-slate-350 transition-all duration-200">
+                    <div key={q.num} className="relative overflow-hidden rounded border border-white/5 bg-[#292e35] hover:border-white/10 transition-all duration-200">
                       {/* Left color bar */}
                       <div className={`absolute top-0 left-0 w-1.5 h-full ${q.lineColor}`} />
                       
                       <div className="p-4 pl-5">
                         {/* Question Header Info */}
-                        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2 mb-2.5">
+                        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/5 pb-2 mb-2.5">
                           <div className="flex items-center gap-2">
-                            <span className="text-[11px] font-mono font-extrabold w-5 h-5 rounded-full bg-slate-100 text-slate-800 flex items-center justify-center border border-slate-300">
+                            <span className="text-[11px] font-mono font-extrabold w-5 h-5 rounded-full bg-[#1f2226] text-white flex items-center justify-center border border-white/10">
                               {q.num}
                             </span>
-                            <span className="font-extrabold text-[12px] text-slate-800 font-sans tracking-tight">
+                            <span className="font-extrabold text-[12px] text-white font-sans tracking-tight">
                               {q.title}
                             </span>
                           </div>
-                          <span className={`text-[9px] font-bold px-2 py-0.5 rounded-md border ${q.badgeColor}`}>
+                          <span className={`text-[9px] font-bold px-2 py-0.5 rounded border ${q.badgeColor}`}>
                             {q.tag}
                           </span>
                         </div>
 
                         {/* Question Main Box */}
-                        <div className="bg-slate-50/50 rounded-lg p-3 border border-slate-100 font-sans text-xs text-slate-800 leading-relaxed font-medium">
-                          🌱 <span className="font-semibold text-slate-900 font-sans select-all leading-relaxed whitespace-pre-line">"{q.question}"</span>
+                        <div className="bg-[#1f2226] rounded p-3 border border-white/5 font-sans text-xs text-slate-300 leading-relaxed font-medium">
+                          🌱 <span className="font-semibold text-slate-200 font-sans select-all leading-relaxed whitespace-pre-line">"${q.question}"</span>
                         </div>
 
                         {/* Interview Checkpoint Instruction */}
-                        <div className="mt-2.5 flex items-start gap-1.5 text-[10px] text-slate-500 font-sans">
-                          <span className="font-extrabold text-indigo-700 uppercase tracking-wide bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100 shrink-0 select-none">
+                        <div className="mt-2.5 flex items-start gap-1.5 text-[10px] text-slate-400 font-sans">
+                          <span className="font-extrabold text-[#8ac43f] uppercase tracking-wide bg-[#8ac43f]/15 px-1.5 py-0.5 rounded border border-[#8ac43f]/20 shrink-0 select-none">
                             💡 평가 포인트
                           </span>
                           <span className="leading-normal pt-0.5">
@@ -853,11 +823,11 @@ export default function CandidateDetailsPanel({ candidate, centerInfo }: Candida
         </div>
 
         {/* Suggested documents to request */}
-        <div className="p-3.5 bg-slate-50/50 border border-slate-100 rounded-xl space-y-1.5">
-          <span className="text-[10px] font-bold text-slate-500 block font-sans">📎 인사검증 추가 확보 권장 서류</span>
+        <div className="p-3.5 bg-[#292e35] border border-white/5 rounded space-y-1.5">
+          <span className="text-[10px] font-bold text-slate-400 block font-sans">📎 인사검증 추가 확보 권장 서류</span>
           <div className="flex flex-wrap gap-2">
             {(candidate.suggestedDocuments || []).map((doc, idx) => (
-              <span key={idx} className="text-[10px] bg-slate-100 text-slate-600 border border-slate-200/50 px-2 py-0.5 rounded font-sans font-medium">
+              <span key={idx} className="text-[10px] bg-[#1f2226] text-slate-300 border border-white/5 px-2 py-0.5 rounded font-sans font-medium">
                 ✔ {doc}
               </span>
             ))}
@@ -865,30 +835,30 @@ export default function CandidateDetailsPanel({ candidate, centerInfo }: Candida
         </div>
 
         {/* 제출 서류 원문 전체 보기 (Expandable viewer) */}
-        <div className="border border-slate-150 rounded-xl overflow-hidden mt-4 bg-slate-50/20" id="raw-docs-viewer">
+        <div className="border border-white/5 rounded overflow-hidden mt-4 bg-[#292e35]" id="raw-docs-viewer">
           <button
             onClick={() => setShowRawTexts(!showRawTexts)}
-            className="w-full px-4 py-3 bg-slate-100/80 hover:bg-slate-200/60 flex items-center justify-between transition focus:outline-none"
+            className="w-full px-4 py-3 bg-[#1f2226]/80 hover:bg-[#1f2226] border-b border-white/5 flex items-center justify-between transition focus:outline-none"
           >
-            <span className="text-xs font-bold text-slate-800 font-sans flex items-center gap-2">
-              <ClipboardCheck className="w-4 h-4 text-emerald-700" />
+            <span className="text-xs font-bold text-white font-sans flex items-center gap-2">
+              <ClipboardCheck className="w-4 h-4 text-[#8ac43f]" />
               📄 지원자 제출 서류 원본 텍스트 전체 보기 (입사지원서·자기소개서)
             </span>
-            <span className="text-xs font-bold text-slate-600 font-mono">
+            <span className="text-xs font-bold text-[#8ac43f] font-mono">
               {showRawTexts ? "접기 ▲" : "펼치기 ▼"}
             </span>
           </button>
 
           {showRawTexts && (
-            <div className="p-4 border-t border-slate-150 bg-white space-y-4">
-              <div className="flex gap-2 border-b border-slate-100 pb-2 flex-wrap">
+            <div className="p-4 border-t border-white/5 bg-[#292e35] space-y-4">
+              <div className="flex gap-2 border-b border-white/5 pb-2 flex-wrap">
                 <button
                   type="button"
                   onClick={() => setActiveTextTab("resume")}
-                  className={`px-3 py-1.5 text-xs font-bold rounded-lg transition ${
+                  className={`px-3 py-1.5 text-xs font-bold rounded transition ${
                     activeTextTab === "resume"
-                      ? "bg-emerald-600 text-white shadow-sm"
-                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                      ? "bg-[#8ac43f] text-white shadow-sm"
+                      : "bg-[#1f2226] text-slate-300 hover:bg-[#1f2226]/85 border border-white/5"
                   }`}
                 >
                   입사지원서 원문 ({candidate.resumeText ? `${candidate.resumeText.length}자` : "0자"})
@@ -896,10 +866,10 @@ export default function CandidateDetailsPanel({ candidate, centerInfo }: Candida
                 <button
                   type="button"
                   onClick={() => setActiveTextTab("selfIntro")}
-                  className={`px-3 py-1.5 text-xs font-bold rounded-lg transition ${
+                  className={`px-3 py-1.5 text-xs font-bold rounded transition ${
                     activeTextTab === "selfIntro"
-                      ? "bg-emerald-600 text-white shadow-sm"
-                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                      ? "bg-[#8ac43f] text-white shadow-sm"
+                      : "bg-[#1f2226] text-slate-305 hover:bg-[#1f2226]/85 border border-white/5"
                   }`}
                 >
                   자기소개서 원문 ({candidate.selfIntroText ? `${candidate.selfIntroText.length}자` : "0자"})
@@ -908,10 +878,10 @@ export default function CandidateDetailsPanel({ candidate, centerInfo }: Candida
                   <button
                     type="button"
                     onClick={() => setActiveTextTab("plan")}
-                    className={`px-3 py-1.5 text-xs font-bold rounded-lg transition ${
+                    className={`px-3 py-1.5 text-xs font-bold rounded transition ${
                       activeTextTab === "plan"
-                        ? "bg-emerald-600 text-white shadow-sm"
-                        : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                        ? "bg-[#8ac43f] text-white shadow-sm"
+                        : "bg-[#1f2226] text-slate-305 hover:bg-[#1f2226]/85 border border-white/5"
                     }`}
                   >
                     직무수행계획서 ({candidate.planText.length}자)
@@ -919,24 +889,24 @@ export default function CandidateDetailsPanel({ candidate, centerInfo }: Candida
                 )}
               </div>
 
-              <div className="bg-slate-50 rounded-lg p-3.5 border border-slate-100 max-h-90 overflow-y-auto font-sans text-xs text-slate-700 leading-relaxed whitespace-pre-wrap select-text break-all">
+              <div className="bg-[#1f2226] rounded p-3.5 border border-white/5 max-h-90 overflow-y-auto font-sans text-xs text-slate-300 leading-relaxed whitespace-pre-wrap select-text break-all">
                 {activeTextTab === "resume" && (
                   candidate.resumeText ? candidate.resumeText.trim() : (
-                    <p className="text-slate-400 italic">등록된 입사지원서 텍스트가 없습니다. 입사지원서 파일 업로드나 AI 파싱을 진행하십시오.</p>
+                    <p className="text-slate-400 italic font-sans">등록된 입사지원서 텍스트가 없습니다. 입사지원서 파일 업로드나 AI 파싱을 진행하십시오.</p>
                   )
                 )}
                 {activeTextTab === "selfIntro" && (
                   candidate.selfIntroText ? candidate.selfIntroText.trim() : (
-                    <p className="text-slate-400 italic">등록된 자기소개서 텍스트가 없습니다. 자기소개서 파일 업로드나 AI 파싱을 진행하십시오.</p>
+                    <p className="text-slate-400 italic font-sans">등록된 자기소개서 텍스트가 없습니다. 자기소개서 파일 업로드나 AI 파싱을 진행하십시오.</p>
                   )
                 )}
                 {activeTextTab === "plan" && (
                   candidate.planText ? candidate.planText.trim() : (
-                    <p className="text-slate-400 italic">등록된 직무수행계획서 텍스트가 없습니다.</p>
+                    <p className="text-slate-400 italic font-sans">등록된 직무수행계획서 텍스트가 없습니다.</p>
                   )
                 )}
               </div>
-              <p className="text-[10px] text-slate-400 font-sans italic text-center leading-normal">
+              <p className="text-[10px] text-slate-500 font-sans italic text-center leading-normal">
                 ※ 위 데이터는 지원자가 직접 업로드했거나 AI 분석 과정에서 마스킹 및 추출된 실제 텍스트 원본입니다. 임의 변조나 누락이 배제되어 공정한 대조 검증을 보조해 줍니다.
               </p>
             </div>
@@ -945,7 +915,7 @@ export default function CandidateDetailsPanel({ candidate, centerInfo }: Candida
       </div>
       
       {/* Footer advice */}
-      <div className="p-4 bg-slate-50 border-t border-slate-100 text-[10px] text-slate-400 italic text-center font-sans">
+      <div className="p-4 bg-[#292e35] border-t border-white/5 text-[10px] text-slate-400 italic text-center font-sans">
         본 리포트는 여성새로일하기센터의 공정하고 합당한 서류 심사 보조를 위한 자문 자료입니다. 면접에서의 심층 진위를 통해 최종 점수를 수정 인준하십시오.
       </div>
     </div>

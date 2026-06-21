@@ -146,7 +146,7 @@ export default function ApiKeyModal({ isOpen, onClose, onSave, onClear }: ApiKey
         {/* Action Link & Button Row */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-4">
           <a
-            href="https://aistudio.google.com/"
+            href="https://aistudio.google.com/app/apikey"
             target="_blank"
             rel="noopener noreferrer"
             className="text-xs font-bold text-slate-500 hover:text-indigo-600 transition flex items-center gap-1 hover:underline cursor-pointer"

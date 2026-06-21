@@ -24,7 +24,8 @@ import {
   Plus,
   HelpCircle,
   Key,
-  Loader2
+  Loader2,
+  ExternalLink
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -77,6 +78,8 @@ export default function App() {
     return true;
   });
 
+  const [showLanding, setShowLanding] = useState<boolean>(true);
+
   const [showWizardDirectly, setShowWizardDirectly] = useState<boolean>(false);
 
   const [candidates, setCandidates] = useState<Candidate[]>(() => {
@@ -124,7 +127,6 @@ export default function App() {
     return !!localStorage.getItem("user_gemini_api_key_v3.1");
   });
   const [isQuotaExceeded, setIsQuotaExceeded] = useState<boolean>(false);
-  const [shortcutFeedback, setShortcutFeedback] = useState<string | null>(null);
 
   useEffect(() => {
     const handleQuotaExceeded = () => {
@@ -136,45 +138,11 @@ export default function App() {
     };
   }, []);
 
-  // Shortcut key listener for fast toggle between Setup Mode (Step 1) and Dashboard Mode (Step 3)
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const isS = e.key === "s" || e.key === "S" || e.keyCode === 83;
-      const hasModifiers = (e.ctrlKey || e.metaKey) && e.shiftKey;
-
-      if (hasModifiers && isS) {
-        e.preventDefault();
-        setCurrentMainStep(prev => {
-          let nextStep = 1;
-          let feedbackText = "";
-          if (prev === 1) {
-            nextStep = 3;
-            feedbackText = "3단계. AI 종합 평정 대시보드로 즉시 전환되었습니다.";
-          } else {
-            nextStep = 1;
-            feedbackText = "1단계. 심사 기준 설정으로 즉시 전환되었습니다.";
-          }
-          setShortcutFeedback(feedbackText);
-          return nextStep;
-        });
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, []);
-
-  // Clear shortcut feedback notification after a brief period
-  useEffect(() => {
-    if (shortcutFeedback) {
-      const timer = setTimeout(() => {
-        setShortcutFeedback(null);
-      }, 3000);
-      return () => clearTimeout(timer);
+    if (!hasUserApiKey) {
+      setShowLanding(true);
     }
-  }, [shortcutFeedback]);
+  }, [hasUserApiKey]);
 
   const [currentMainStep, setCurrentMainStep] = useState<number>(() => {
     try {
@@ -231,6 +199,8 @@ export default function App() {
   const displayedCandidates = filterRegisteredOnly
     ? candidates.filter(c => !c.id.startsWith("cand_preset_"))
     : candidates;
+
+  const selectedCandidate = candidates.find(c => c.id === selectedCandidateId) || null;
 
   // Sync state with localStorage
   useEffect(() => {
@@ -419,36 +389,48 @@ export default function App() {
       report += `    * 민원 수습/회복력 검증: \n`;
       cand.interviewQuestions.civilCulture.forEach(q => report += `      - ${q}\n`);
       if (cand.interviewQuestions.unverified && cand.interviewQuestions.unverified.length > 0) {
-        report += `    * 근거 부족 미검증 및 하한 검증: \n`;
+        report += `    * 근거 역량 검증 질문: \n`;
         cand.interviewQuestions.unverified.forEach(q => report += `      - ${q}\n`);
       }
-      report += `  - 추가 권장 확보 서류: ${cand.suggestedDocuments.join(", ")}\n\n`;
+      report += `\n`;
     });
 
-    report += `------------------------------------------------------------------------\n`;
-    report += `⚠️ [자문 성격 고지]\n`;
-    report += `본 리포트는 서류 검토 및 면접 설계 보조 자료이며, 최종 합격 여부는 종합적인 면접 전형을 통하여 의사결정 수치가 수정 인준되는 사람의 판단으로 확정되어야 합니다.\n`;
-
-    // Download file
     const blob = new Blob([report], { type: "text/plain;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `${centerInfo.region}_새일센터_자체인사_채용대시보드_v3.1.txt`;
+    link.download = `Saeil_Center_HR_Report_${centerInfo.centerName}.txt`;
     link.click();
     URL.revokeObjectURL(url);
   };
 
-  const selectedCandidate = candidates.find(c => c.id === selectedCandidateId) || null;
-
-  if (!isSetupComplete && !showWizardDirectly) {
+  if (showLanding) {
     return (
-      <>
+      <div className="bg-[#2f353d] min-h-screen">
         <LandingPage 
-          onStartSetup={() => setShowWizardDirectly(true)}
-          onQuickLoadSample={handleQuickLoadSample}
+          onStartSetup={() => {
+            if (!hasUserApiKey) {
+              setIsApiKeyModalOpen(true);
+              return;
+            }
+            setShowLanding(false);
+            if (!isSetupComplete) {
+              setShowWizardDirectly(true);
+            }
+          }}
+          onQuickLoadSample={() => {
+            if (!hasUserApiKey) {
+              setIsApiKeyModalOpen(true);
+              return;
+            }
+            handleQuickLoadSample();
+            setShowLanding(false);
+          }}
           onOpenApiKeyModal={() => setIsApiKeyModalOpen(true)}
           hasUserApiKey={hasUserApiKey}
+          onLogoClick={() => {
+            setShowLanding(true);
+          }}
         />
         <ApiKeyModal
           isOpen={isApiKeyModalOpen}
@@ -456,19 +438,25 @@ export default function App() {
           onSave={() => {
             setHasUserApiKey(true);
             setIsApiKeyModalOpen(false);
-            setShowWizardDirectly(true);
+            setShowLanding(false);
+            setIsSetupComplete(true);
+            setCurrentMainStep(1);
+            localStorage.setItem("saerong_setup_complete_v3.1", "true");
           }}
           onClear={() => setHasUserApiKey(false)}
         />
-      </>
+      </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans" id="recruiter-app-viewport">
-      {/* Upper Navigation Bar - HOSTLINEA Custom Themed Edition */}
-      <header className="bg-[#2f353d] text-white border-b border-white/10 sticky top-0 z-40 px-6 py-4 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 shadow-md shrink-0">
-        <div className="flex items-center gap-3">
+    <div className="min-h-screen bg-[#2f353d] text-slate-100 flex flex-col font-sans" id="recruiter-app-viewport">
+      {/* Upper Navigation Bar - SAEIL EVAL Custom Themed Edition */}
+      <header className="bg-[#1f2226] text-white border-b border-white/10 sticky top-0 z-40 px-6 py-4 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 shadow-md shrink-0">
+        <div 
+          className="flex items-center gap-3 cursor-pointer select-none hover:opacity-90 transition-opacity" 
+          onClick={() => setShowLanding(true)}
+        >
           {/* Trademark 2 green vertical bars */}
           <div className="flex gap-1 shrink-0">
             <div className="w-[6px] h-6 bg-[#8ac43f] rounded-xs" />
@@ -476,18 +464,18 @@ export default function App() {
           </div>
           <div className="space-y-0.5">
             <h1 className="font-sans font-extrabold text-white text-base leading-tight flex flex-wrap items-center gap-1.5">
-              <span className="text-white font-extrabold uppercase font-sans tracking-tight mr-1">HOSTLINEA</span>
+              <span className="text-white font-extrabold uppercase font-sans tracking-tight mr-1">SAEIL EVAL</span>
               <span className="bg-[#8ac43f] text-white px-2 py-0.5 rounded-sm text-[9px] font-extrabold tracking-wider">{centerInfo.region}</span>
               <span className="text-slate-200">{centerInfo.centerName} 채용 평정 시스템</span>
             </h1>
-            <p className="text-[11px] text-slate-300 font-sans leading-relaxed">
+            <p className="text-[11px] text-slate-350 font-sans leading-relaxed">
               채용 직무: <span className="text-[#8ac43f] font-bold">{centerInfo.customProfile?.jobTitle || centerInfo.targetJobType}</span> | 
               가중치 배율: <span className="text-white font-medium">직무 {centerInfo.customProfile?.ratioJobPerformance}% : 조직적합 {centerInfo.customProfile?.ratioCultureSync}%</span> | 
               상태: <span className="text-[#8ac43f] font-bold inline-flex items-center gap-1">● 법정보호 마스킹 활성</span>
               {hasUserApiKey ? (
                 <span className="text-emerald-400 font-bold ml-2 inline-flex items-center gap-1">| 🔑 API 키 작동 중</span>
               ) : (
-                <span className="text-slate-300 font-bold ml-2 inline-flex items-center gap-1">| 🔑 기본 무료 모드</span>
+                <span className="text-rose-400 font-bold ml-2 inline-flex items-center gap-1">| ⚠️ API 키 미등록 (이용 제한)</span>
               )}
             </p>
           </div>
@@ -512,32 +500,29 @@ export default function App() {
             <button
               type="button"
               onClick={() => {
-                setIsSetupComplete(false);
-                setShowWizardDirectly(false);
+                setShowLanding(true);
               }}
               className="py-1.5 px-3 bg-white/5 hover:bg-white/10 text-slate-200 border border-white/10 font-sans text-xs font-bold rounded transition-all duration-150 flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
             >
               <HelpCircle className="w-3.5 h-3.5 text-slate-400" />
-              시스템 소개(홈)
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setIsSetupComplete(false);
-                setShowWizardDirectly(true);
-              }}
-              className="py-1.5 px-3.5 bg-white/5 hover:bg-white/10 text-slate-200 border border-white/10 font-sans text-xs font-bold rounded transition-all duration-150 flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
-              id="run-wizard-btn"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-[#8ac43f]" />
-              인사설정 마법사
+              시작화면
             </button>
             {candidates.length > 0 && (
               <>
                 <button
                   type="button"
-                  onClick={handleExportTextReport}
-                  className="py-1.5 px-3.5 bg-[#8ac43f] hover:bg-[#7cb337] text-white font-sans text-xs font-bold rounded transition-all duration-150 flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
+                  onClick={() => {
+                    if (!hasUserApiKey) {
+                      setIsApiKeyModalOpen(true);
+                      return;
+                    }
+                    handleExportTextReport();
+                  }}
+                  className={`py-1.5 px-3.5 font-sans text-xs font-bold rounded transition-all duration-150 flex items-center justify-center gap-1.5 shadow-sm cursor-pointer ${
+                    !hasUserApiKey
+                      ? "bg-slate-705 text-slate-400 opacity-50 cursor-not-allowed"
+                      : "bg-[#8ac43f] hover:bg-[#7cb337] text-white"
+                  }`}
                   id="export-text-btn"
                 >
                   <Download className="w-3.5 h-3.5" />
@@ -545,8 +530,18 @@ export default function App() {
                 </button>
                 <button
                   type="button"
-                  onClick={handleClearCandidates}
-                  className="py-1.5 px-3.5 bg-red-900/40 hover:bg-red-900/60 text-red-200 border border-red-800 font-sans text-xs font-bold rounded transition-all duration-150 flex items-center justify-center gap-1.5 cursor-pointer"
+                  onClick={() => {
+                    if (!hasUserApiKey) {
+                      setIsApiKeyModalOpen(true);
+                      return;
+                    }
+                    handleClearCandidates();
+                  }}
+                  className={`py-1.5 px-3.5 font-sans text-xs font-bold rounded transition-all duration-150 flex items-center justify-center gap-1.5 cursor-pointer border border-red-800 ${
+                    !hasUserApiKey
+                      ? "bg-red-900/10 text-red-400 opacity-50 cursor-not-allowed"
+                      : "bg-red-900/40 hover:bg-red-900/60 text-red-200"
+                  }`}
                   id="clear-all-btn"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
@@ -570,8 +565,8 @@ export default function App() {
       </header>
 
       {/* Horizon Step Navigation Stepper */}
-      <div className="bg-white border-b border-slate-200/80 shadow-sm px-6 py-3.5 shrink-0">
-        <div className="max-w-[1600px] mx-auto w-full flex flex-col lg:flex-row justify-between items-center gap-3 bg-slate-50/50 p-2 rounded-sm border border-slate-150">
+      <div className="bg-[#1f2226] border-b border-white/10 px-6 py-3.5 shrink-0 shadow-md">
+        <div className="max-w-[1600px] mx-auto w-full flex flex-col lg:flex-row justify-between items-center gap-3 bg-[#292e35] p-2 rounded border border-white/10">
           <div className="flex items-center gap-1.5 md:gap-3 flex-1 justify-around max-w-4xl mx-auto w-full">
             {[
               { id: 1, title: "1단계. 심사 기준 설정", desc: "분석 핵심역량 수립" },
@@ -584,43 +579,39 @@ export default function App() {
                 <React.Fragment key={item.id}>
                   <button
                     type="button"
-                    onClick={() => setCurrentMainStep(item.id)}
-                    className={`flex items-center gap-2.5 text-left focus:outline-none focus:ring-2 focus:ring-slate-950 rounded-sm p-1.5 md:p-2 hover:bg-white transition-all cursor-pointer ${
-                      isActive ? "bg-white shadow-sm ring-1 ring-slate-200" : ""
+                    onClick={() => {
+                      if (!hasUserApiKey) {
+                        setIsApiKeyModalOpen(true);
+                        return;
+                      }
+                      setCurrentMainStep(item.id);
+                    }}
+                    className={`flex items-center gap-2.5 text-left focus:outline-none focus:ring-1 focus:ring-[#8ac43f]/30 rounded p-1.5 md:p-2 hover:bg-[#2f353d]/40 transition-all cursor-pointer ${
+                      isActive ? "bg-[#2f353d] shadow-sm border border-white/10" : "border border-transparent"
                     }`}
                   >
                     <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-sm flex items-center justify-center text-xs font-mono font-extrabold shrink-0 transition-all duration-200 ${
                       isActive 
-                        ? "bg-slate-950 text-white shadow-sm" 
+                        ? "bg-[#8ac43f] text-white shadow-sm" 
                         : isCompleted 
-                          ? "bg-slate-800 text-slate-100 font-extrabold" 
-                          : "bg-slate-200 text-slate-500 border border-slate-300/40"
+                          ? "bg-[#8ac43f]/20 text-[#8ac43f] font-extrabold border border-[#8ac43f]/30" 
+                          : "bg-[#1f2226] text-slate-500 border border-white/10"
                     }`}>
                       {isCompleted ? "✓" : item.id}
                     </div>
-                    <div className="hidden sm:block">
-                      <p className={`text-xs font-bold leading-tight ${isActive ? "text-slate-950" : isCompleted ? "text-slate-700" : "text-slate-400"}`}>
+                    <div className="hidden sm:block font-sans">
+                      <p className={`text-xs font-bold leading-tight ${isActive ? "text-[#8ac43f]" : isCompleted ? "text-slate-200" : "text-slate-500"}`}>
                         {item.title}
                       </p>
                       <p className="text-[10px] text-slate-400 font-medium leading-none mt-0.5">{item.desc}</p>
                     </div>
                   </button>
                   {index < 2 && (
-                    <div className={`hidden sm:block flex-1 max-w-[40px] md:max-w-[70px] h-0.5 shrink-0 transition-all duration-300 ${isCompleted ? "bg-slate-800" : "bg-slate-200"}`} />
+                    <div className={`hidden sm:block flex-1 max-w-[40px] md:max-w-[70px] h-0.5 shrink-0 transition-all duration-300 ${isCompleted ? "bg-[#8ac43f]/50" : "bg-white/5"}`} />
                   )}
                 </React.Fragment>
               );
             })}
-          </div>
-          
-          {/* Quick Toggle Keyboard Shortcut Info */}
-          <div className="hidden lg:flex items-center gap-1.5 bg-white border border-slate-200 shadow-xs px-2.5 py-1 rounded text-[11px] font-sans text-slate-500 shrink-0 select-none animate-fade-in">
-            <span className="font-bold flex items-center gap-0.5">
-              <kbd className="bg-slate-100 border border-slate-250 rounded px-1.5 py-0.5 text-[9px] font-mono shadow-2xs">Ctrl</kbd>+
-              <kbd className="bg-slate-100 border border-slate-250 rounded px-1.5 py-0.5 text-[9px] font-mono shadow-2xs">Shift</kbd>+
-              <kbd className="bg-slate-100 border border-slate-250 rounded px-1.5 py-0.5 text-[9px] font-mono shadow-2xs">S</kbd>
-            </span>
-            <span className="text-slate-400 font-medium ml-1">심사 설정 ↔ 대시보드 고속 전환</span>
           </div>
         </div>
       </div>
@@ -662,10 +653,10 @@ export default function App() {
               transition={{ duration: 0.25 }}
               className="flex-1 p-6 max-w-4xl mx-auto w-full flex flex-col justify-start space-y-6"
             >
-              <div className="bg-white p-6 rounded border border-slate-250 shadow-none">
+              <div className="bg-[#1f2226] p-6 rounded border border-white/10 shadow-lg">
                 <div className="mb-6">
-                  <h3 className="font-sans font-extrabold text-slate-900 text-base mb-1.5 flex items-center gap-2">
-                    <Sparkles className="w-5 h-5 text-slate-950" />
+                  <h3 className="font-sans font-extrabold text-white text-base mb-1.5 flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-[#8ac43f]" />
                     1단계: 채용 기관 정보 및 직무 가중치 기준 설정
                   </h3>
                   <p className="text-xs text-slate-400 leading-relaxed font-sans">
@@ -682,8 +673,14 @@ export default function App() {
               <div className="flex justify-end pt-2">
                 <button
                   type="button"
-                  onClick={() => setCurrentMainStep(2)}
-                  className="py-3 px-6 bg-slate-950 hover:bg-slate-900 text-white font-sans text-xs font-bold rounded-sm transition-all shadow-none flex items-center gap-2 cursor-pointer"
+                  onClick={() => {
+                    if (!hasUserApiKey) {
+                      setIsApiKeyModalOpen(true);
+                      return;
+                    }
+                    setCurrentMainStep(2);
+                  }}
+                  className="py-3 px-6 bg-[#8ac43f] hover:bg-[#7cb337] text-white font-sans text-xs font-bold rounded shadow transition-all flex items-center gap-2 cursor-pointer"
                 >
                   <span>2단계 구직서류 등록하러 가기</span>
                   <ArrowRight className="w-4 h-4" />
@@ -713,11 +710,11 @@ export default function App() {
                 </div>
               )}
 
-              <div className="bg-white rounded border border-slate-250 shadow-none overflow-hidden">
-                <div className="px-6 py-4 bg-slate-50 border-b border-slate-205 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+              <div className="bg-[#1f2226] rounded border border-white/10 shadow-lg overflow-hidden">
+                <div className="px-6 py-4 bg-[#292e35] border-b border-white/10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                   <div>
-                    <h3 className="font-sans font-extrabold text-slate-900 text-base flex items-center gap-2">
-                      <FileCheck className="w-5 h-5 text-slate-950" />
+                    <h3 className="font-sans font-extrabold text-white text-base flex items-center gap-2">
+                      <FileCheck className="w-5 h-5 text-[#8ac43f]" />
                       2단계: 심사 대상 구직서류(입사지원서 및 자소서) 분석 적재
                     </h3>
                     <p className="text-[11px] text-slate-400 font-sans mt-0.5">파일을 드래그해 놓거나 가이드 순차 양식을 활용하여 쉽게 수집할 수 있습니다.</p>
@@ -725,9 +722,17 @@ export default function App() {
                   {candidates.length > 0 && (
                     <button
                       type="button"
-                      onClick={() => !queueProcessing && setCurrentMainStep(3)}
+                      onClick={() => {
+                        if (!hasUserApiKey) {
+                          setIsApiKeyModalOpen(true);
+                          return;
+                        }
+                        if (!queueProcessing) {
+                          setCurrentMainStep(3);
+                        }
+                      }}
                       disabled={queueProcessing}
-                      className="py-1.5 px-3.5 bg-slate-900 hover:bg-slate-800 text-slate-200 font-sans text-xs font-bold rounded-sm transition flex items-center gap-1.5 cursor-pointer disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed"
+                      className="py-1.5 px-3.5 bg-slate-800 hover:bg-slate-755 text-slate-200 border border-white/10 font-sans text-xs font-bold rounded shadow transition flex items-center gap-1.5 cursor-pointer disabled:bg-slate-900 disabled:text-slate-600 disabled:cursor-not-allowed"
                     >
                       {queueProcessing ? (
                         <>
@@ -737,7 +742,7 @@ export default function App() {
                       ) : (
                         <>
                           <span>대시보드로 바로가기</span>
-                          <ArrowRight className="w-3.5 h-3.5" />
+                          <ArrowRight className="w-3.5 h-3.5 text-[#8ac43f]" />
                         </>
                       )}
                     </button>
@@ -751,9 +756,9 @@ export default function App() {
                   onPreloadSamples={handlePreloadSamples}
                   hasCandidates={candidates.length > 0}
                   onQueueProgressChange={(completed, total, isProc) => {
-                    setQueueCompleted(completed);
-                    setQueueTotal(total);
-                    setQueueProcessing(isProc);
+                     setQueueCompleted(completed);
+                     setQueueTotal(total);
+                     setQueueProcessing(isProc);
                   }}
                 />
               </div>
@@ -761,8 +766,14 @@ export default function App() {
               <div className="flex justify-between pt-2">
                 <button
                   type="button"
-                  onClick={() => setCurrentMainStep(1)}
-                  className="py-3 px-5 border border-slate-250 bg-white hover:bg-slate-55 text-slate-750 font-sans text-xs font-bold rounded-sm transition flex items-center gap-2 cursor-pointer"
+                  onClick={() => {
+                    if (!hasUserApiKey) {
+                      setIsApiKeyModalOpen(true);
+                      return;
+                    }
+                    setCurrentMainStep(1);
+                  }}
+                  className="py-3 px-5 border border-white/10 bg-[#1f2226] hover:bg-white/5 text-slate-300 font-sans text-xs font-bold rounded transition flex items-center gap-2 cursor-pointer"
                 >
                   <ArrowLeft className="w-4 h-4" />
                   <span>이전 단계 (심사 기준 수립)</span>
@@ -770,17 +781,25 @@ export default function App() {
                 {candidates.length > 0 && (
                   <button
                     type="button"
-                    onClick={() => !queueProcessing && setCurrentMainStep(3)}
+                    onClick={() => {
+                      if (!hasUserApiKey) {
+                        setIsApiKeyModalOpen(true);
+                        return;
+                      }
+                      if (!queueProcessing) {
+                        setCurrentMainStep(3);
+                      }
+                    }}
                     disabled={queueProcessing}
-                    className={`py-3 px-6 font-sans text-xs font-bold rounded-sm transition-all shadow-none flex items-center gap-2 cursor-pointer ${
+                    className={`py-3 px-6 font-sans text-xs font-bold rounded transition-all shadow flex items-center gap-2 cursor-pointer ${
                       queueProcessing 
-                        ? "bg-slate-200 text-slate-500 cursor-not-allowed" 
-                        : "bg-slate-950 hover:bg-slate-900 text-white"
+                        ? "bg-slate-800 text-slate-500 border border-white/10 cursor-not-allowed" 
+                        : "bg-[#8ac43f] hover:bg-[#7cb337] text-white"
                     }`}
                   >
                     {queueProcessing ? (
                       <>
-                        <Loader2 className="w-4 h-4 animate-spin text-slate-500" />
+                        <Loader2 className="w-4 h-4 animate-spin text-[#8ac43f]" />
                         <span>일괄 구직서류 AI 종합 평가 진행 중... ({queueCompleted} / {queueTotal} 완료)</span>
                       </>
                     ) : (
@@ -817,12 +836,12 @@ export default function App() {
               )}
 
               {candidates.length === 0 ? (
-                <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-12 text-center max-w-2xl mx-auto space-y-5 my-12">
-                  <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto text-slate-400">
-                    <FileCheck className="w-8 h-8 text-slate-400" />
+                <div className="bg-[#1f2226] rounded-2xl border border-white/10 p-12 text-center max-w-2xl mx-auto space-y-5 my-12 shadow-xl">
+                  <div className="w-16 h-16 bg-[#292e35] border border-white/10 rounded-full flex items-center justify-center mx-auto text-slate-400">
+                    <FileCheck className="w-8 h-8 text-[#8ac43f]" />
                   </div>
                   <div className="space-y-2">
-                    <h4 className="text-base font-bold text-slate-800">등록된 구직자가 없습니다.</h4>
+                    <h4 className="text-base font-bold text-white">등록된 구직자가 없습니다.</h4>
                     <p className="text-xs text-slate-400 font-sans leading-relaxed">
                       실시간 가로 분석 대시보드를 생성하려면 입사지원서 적재 및 서류 분석이 우선되어야 합니다.<br />
                       2단계에서 서류 양식을 직접 입력하거나, 샘플 자동 불러오기를 실행해 보세요.
@@ -832,7 +851,7 @@ export default function App() {
                     <button
                       type="button"
                       onClick={() => setCurrentMainStep(2)}
-                      className="py-2.5 px-5 bg-indigo-600 hover:bg-indigo-700 text-white font-sans text-xs font-bold rounded-xl transition shadow-sm inline-flex items-center gap-1.5 cursor-pointer"
+                      className="py-2.5 px-5 bg-[#8ac43f] hover:bg-[#7cb337] text-white font-sans text-xs font-bold rounded shadow transition inline-flex items-center gap-1.5 cursor-pointer"
                     >
                       <Plus className="w-4 h-4" />
                       <span>2단계 구직서류 등록하러 가기</span>
@@ -867,7 +886,7 @@ export default function App() {
                         centerInfo={centerInfo}
                       />
                     ) : (
-                      <div className="bg-white rounded-3xl border border-slate-100 p-12 text-center text-slate-400 shadow-sm font-sans text-xs">
+                      <div className="bg-[#1f2226] rounded-2xl border border-white/10 p-12 text-center text-slate-400 shadow-lg font-sans text-xs">
                         동종 평가 검증을 기획할 구직자를 좌측 목록에서 선택하십시오.
                       </div>
                     )}
@@ -875,11 +894,11 @@ export default function App() {
                 </div>
               )}
 
-              <div className="flex flex-col sm:flex-row justify-between gap-3 pt-4 border-t border-slate-200">
+              <div className="flex flex-col sm:flex-row justify-between gap-3 pt-4 border-t border-white/10">
                 <button
                   type="button"
                   onClick={() => setCurrentMainStep(2)}
-                  className="py-3 px-5 border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 font-sans text-xs font-bold rounded-2xl transition flex items-center justify-center gap-2 cursor-pointer"
+                  className="py-3 px-5 border border-white/10 bg-[#1f2226] hover:bg-white/5 text-slate-300 font-sans text-xs font-bold rounded transition flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <ArrowLeft className="w-4 h-4" />
                   <span>이전 단계 (구직서류 등록 및 분석)</span>
@@ -887,7 +906,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => setCurrentMainStep(1)}
-                  className="py-3 px-5 border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 font-sans text-xs font-bold rounded-2xl transition flex items-center justify-center gap-2 cursor-pointer"
+                  className="py-3 px-5 border border-white/10 bg-[#1f2226] hover:bg-white/5 text-slate-300 font-sans text-xs font-bold rounded transition flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <span>1단계 (인사/심사 기준 설정) 재조정</span>
                   <ArrowRight className="w-4 h-4" />
@@ -900,23 +919,23 @@ export default function App() {
       </div>
 
       {/* Recruiter Policy footer */}
-      <footer className="bg-white border-t border-slate-200 mt-12 py-6 px-10 text-center space-y-2 text-xs text-slate-400">
-        <div className="flex justify-center items-center gap-6 text-slate-500 font-sans font-bold flex-wrap">
+      <footer className="bg-[#1f2226] border-t border-white/10 mt-12 py-8 px-10 text-center space-y-3 text-xs text-slate-400">
+        <div className="flex justify-center items-center gap-6 text-slate-300 font-sans font-bold flex-wrap">
           <div className="flex items-center gap-1.5">
-            <FileCheck className="w-4 h-4 text-indigo-600" />
+            <span className="w-2 h-2 rounded bg-[#8ac43f]" />
             <span>경력단절 무감점 원격 준수</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <Briefcase className="w-4 h-4 text-emerald-600" />
+            <span className="w-2 h-2 rounded bg-[#8ac43f]" />
             <span>티어 동급군(±2점) 서열 해제</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <HeartHandshake className="w-4 h-4 text-rose-500" />
+            <span className="w-2 h-2 rounded bg-[#8ac43f]" />
             <span>민감정보 의무 마스킹 보장</span>
           </div>
         </div>
-        <p className="pt-2 font-sans text-[11px] text-slate-500">본 프로그램은 여성새로일하기센터의 서류 스크리닝 및 면접 가이드 제작을 돕는 의사결정 보조 도구(자문 목적)입니다. 법정 비수집 정보는 완벽히 마스킹되어 평가에서 배제되었습니다.</p>
-        <p className="text-[10px] font-mono text-slate-400">© 2026 여성새로일하기센터 자체인사팀 종합평가지원단. All rights reserved.</p>
+        <p className="pt-2 font-sans text-[11px] text-slate-400">본 프로그램은 여성새로일하기센터의 서류 스크리닝 및 면접 가이드 제작을 돕는 의사결정 보조 도구(자문 목적)입니다. 법정 비수집 정보는 완벽히 마스킹되어 평가에서 배제되었습니다.</p>
+        <p className="text-[10px] font-mono text-slate-500">© 2026 여성새로일하기센터 자체인사팀 종합평가지원단. All rights reserved.</p>
       </footer>
 
       {!isSetupComplete && (
@@ -1014,25 +1033,6 @@ export default function App() {
         onClear={() => setHasUserApiKey(false)}
       />
 
-      <AnimatePresence>
-        {shortcutFeedback && (
-          <motion.div
-            initial={{ opacity: 0, y: 30, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 350, damping: 25 }}
-            className="fixed bottom-6 right-6 z-50 max-w-sm bg-slate-950 text-white border border-slate-800 rounded shadow-xl p-3.5 flex items-start gap-3 font-sans select-none"
-          >
-            <div className="w-7 h-7 rounded bg-slate-800 text-slate-100 flex items-center justify-center font-bold text-xs shrink-0 ring-1 ring-slate-700 mt-0.5 shadow-sm">
-              ⚡
-            </div>
-            <div className="flex-1">
-              <p className="text-xs font-bold text-white leading-tight">고속 단축키 동작</p>
-              <p className="text-[11px] text-slate-350 mt-1 leading-normal font-sans font-medium">{shortcutFeedback}</p>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }
