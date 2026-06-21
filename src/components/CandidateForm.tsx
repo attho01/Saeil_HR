@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { CenterInfo, CandidateRawInput } from "../types";
 import { 
   UserPlus, 
@@ -22,10 +22,11 @@ import {
 
 interface CandidateFormProps {
   centerInfo: CenterInfo;
-  onAnalyze: (input: CandidateRawInput) => Promise<void>;
+  onAnalyze: (input: CandidateRawInput, skipNavigation?: boolean) => Promise<void>;
   isLoading: boolean;
   onPreloadSamples: () => void;
   hasCandidates: boolean;
+  onQueueProgressChange?: (completedCount: number, totalCount: number, isProcessing: boolean) => void;
 }
 
 export default function CandidateForm({ 
@@ -33,7 +34,8 @@ export default function CandidateForm({
   onAnalyze, 
   isLoading, 
   onPreloadSamples,
-  hasCandidates 
+  hasCandidates,
+  onQueueProgressChange
 }: CandidateFormProps) {
   const [intakeMode, setIntakeMode] = useState<'fast' | 'upload'>('upload');
   
@@ -72,6 +74,13 @@ export default function CandidateForm({
 
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFileItem[]>([]);
 
+  useEffect(() => {
+    const total = uploadedFiles.length;
+    const completed = uploadedFiles.filter(f => f.registerSuccess || f.status === "error").length;
+    const isProcessing = uploadedFiles.some(f => f.status === "pending" || f.status === "processing" || f.registerLoading);
+    onQueueProgressChange?.(completed, total, isProcessing);
+  }, [uploadedFiles, onQueueProgressChange]);
+
   const handleMultipleFilesProcess = async (filesList: FileList | File[] | null) => {
     if (!filesList || filesList.length === 0) return;
 
@@ -105,137 +114,162 @@ export default function CandidateForm({
     // Add new items to state
     setUploadedFiles(prev => [...prev, ...validFiles.map(v => v.item)]);
 
-    // Process each document sequentially
-    for (const { file, item } of validFiles) {
-      setUploadedFiles(prev =>
-        prev.map(p =>
-          p.id === item.id
-            ? { ...p, status: "processing", progressMsg: "파일 바이너리 인코딩 및 전송 중..." }
-            : p
-        )
-      );
+    // Process all documents in parallel
+    await Promise.all(
+      validFiles.map(async ({ file, item }) => {
+        setUploadedFiles(prev =>
+          prev.map(p =>
+            p.id === item.id
+              ? { ...p, status: "processing", progressMsg: "파일 바이너리 인코딩 및 전송 중..." }
+              : p
+          )
+        );
 
-      const steps = [
-        "1/4. 서류 레이아웃 및 폰트 구조화 인덱싱...",
-        "2/4. 개인정보 블라인드 스크리닝 필터 조율 중...",
-        "3/4. 취업 자격 이력 및 직무 전문 역량 수집 중...",
-        "4/4. 지원 포부 및 갈등극복 민원 자소서 문장 파싱 중...",
-        "최종 AI 무결성 스펙 대조 검토 중..."
-      ];
+        const steps = [
+          "1/4. 서류 레이아웃 및 폰트 구조화 인덱싱...",
+          "2/4. 개인정보 블라인드 스크리닝 필터 조율 중...",
+          "3/4. 취업 자격 이력 및 직무 전문 역량 수집 중...",
+          "4/4. 지원 포부 및 갈등극복 민원 자소서 문장 파싱 중...",
+          "최종 AI 무결성 스펙 대조 검토 중..."
+        ];
 
-      let currentStep = 0;
-      const progressInterval = setInterval(() => {
-        if (currentStep < steps.length) {
-          setUploadedFiles(prev =>
-            prev.map(p =>
-              p.id === item.id
-                ? { ...p, progressMsg: steps[currentStep] }
-                : p
-            )
-          );
-          currentStep++;
-        }
-      }, 600);
+        let currentStep = 0;
+        const progressInterval = setInterval(() => {
+          if (currentStep < steps.length) {
+            setUploadedFiles(prev =>
+              prev.map(p =>
+                p.id === item.id
+                  ? { ...p, progressMsg: steps[currentStep] }
+                  : p
+              )
+            );
+            currentStep++;
+          }
+        }, 500); // slightly faster text progression to feel more highly responsive
 
-      try {
-        // Read to Base64
-        const reader = new FileReader();
-        const base64Promise = new Promise<string>((resolve, reject) => {
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = error => reject(error);
-        });
-        reader.readAsDataURL(file);
-        const base64Data = await base64Promise;
+        try {
+          // Read to Base64
+          const reader = new FileReader();
+          const base64Promise = new Promise<string>((resolve, reject) => {
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = error => reject(error);
+          });
+          reader.readAsDataURL(file);
+          const base64Data = await base64Promise;
 
-        const response = await fetch("/api/parse-document-candidate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            fileData: base64Data,
-            mimeType: file.type || "application/pdf",
-            fileName: file.name
-          })
-        });
+          let mimeTypeVal = file.type;
+          if (!mimeTypeVal && file.name) {
+            const extIndex = file.name.lastIndexOf('.');
+            if (extIndex !== -1) {
+              const ext = file.name.slice(extIndex).toLowerCase();
+              if (ext === ".docx") mimeTypeVal = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+              else if (ext === ".doc") mimeTypeVal = "application/msword";
+              else if (ext === ".txt") mimeTypeVal = "text/plain";
+              else if (ext === ".png") mimeTypeVal = "image/png";
+              else if (ext === ".jpg" || ext === ".jpeg") mimeTypeVal = "image/jpeg";
+              else if (ext === ".gif") mimeTypeVal = "image/gif";
+              else if (ext === ".webp") mimeTypeVal = "image/webp";
+            }
+          }
+          if (!mimeTypeVal) mimeTypeVal = "application/pdf";
 
-        clearInterval(progressInterval);
+          const userApiKey = localStorage.getItem("user_gemini_api_key_v3.1");
+          const response = await fetch("/api/parse-document-candidate", {
+            method: "POST",
+            headers: { 
+              "Content-Type": "application/json",
+              ...(userApiKey ? { "x-gemini-api-key": userApiKey } : {})
+            },
+            body: JSON.stringify({
+              fileData: base64Data,
+              mimeType: mimeTypeVal,
+              fileName: file.name
+            })
+          });
 
-        if (!response.ok) {
-          const errData = await response.json();
-          throw new Error(errData.error || "구직 서류 파싱 중 오류가 보고되었습니다.");
-        }
+          clearInterval(progressInterval);
 
-        const data = await response.json();
-        if (data.result) {
+          if (!response.ok) {
+            const errData = await response.json();
+            throw new Error(errData.error || "구직 서류 파싱 중 오류가 보고되었습니다.");
+          }
+
+          const data = await response.json();
+          if (data.geminiQuotaExceeded) {
+            window.dispatchEvent(new CustomEvent("gemini-quota-exceeded", { detail: true }));
+          }
+          if (data.result) {
+            setUploadedFiles(prev =>
+              prev.map(p =>
+                p.id === item.id
+                  ? {
+                      ...p,
+                      status: "success",
+                      progressMsg: "분석 완료",
+                      result: data.result,
+                      registerLoading: true
+                    }
+                  : p
+              )
+            );
+
+            // 3단계 대시보드로 자동 전송 및 정밀 AI 심사 개시
+            try {
+              await onAnalyze({
+                name: data.result.name || "구직자",
+                resumeText: data.result.resumeText || "",
+                selfIntroText: data.result.selfIntroText || "",
+                planText: data.result.planText || "",
+                policyBonus: 0,
+                detectedPersonalInfo: data.result.detectedPersonalInfo || ""
+              }, true);
+
+              setUploadedFiles(prev =>
+                prev.map(p =>
+                  p.id === item.id
+                    ? {
+                        ...p,
+                        registerLoading: false,
+                        registerSuccess: true,
+                        progressMsg: "종합 채점 완료 (3단계 대시보드에서 확인 가능)"
+                      }
+                    : p
+                )
+              );
+            } catch (deepErr: any) {
+              console.error("자동 대시보드 종합 채점 연동 실패:", deepErr);
+              setUploadedFiles(prev =>
+                prev.map(p =>
+                  p.id === item.id
+                    ? {
+                        ...p,
+                        registerLoading: false,
+                        status: "error",
+                        errorMsg: deepErr.message || "종합 AI 채점 과정에서 오류가 발생했습니다."
+                      }
+                    : p
+                )
+              );
+            }
+          } else {
+            throw new Error("서류 안에서 평가 정합성을 갖춘 텍스트를 찾지 못했습니다.");
+          }
+        } catch (err: any) {
+          clearInterval(progressInterval);
           setUploadedFiles(prev =>
             prev.map(p =>
               p.id === item.id
                 ? {
                     ...p,
-                    status: "success",
-                    progressMsg: "분석 완료",
-                    result: data.result,
-                    registerLoading: true
+                    status: "error",
+                    errorMsg: err.message || "파일 업로드 분석 장애가 발생했습니다."
                   }
                 : p
             )
           );
-
-          // 3단계 대시보드로 자동 전송 및 정밀 AI 심사 개시
-          try {
-            await onAnalyze({
-              name: data.result.name || "구직자",
-              resumeText: data.result.resumeText || "",
-              selfIntroText: data.result.selfIntroText || "",
-              planText: data.result.planText || "",
-              policyBonus: 0,
-              detectedPersonalInfo: data.result.detectedPersonalInfo || ""
-            });
-
-            setUploadedFiles(prev =>
-              prev.map(p =>
-                p.id === item.id
-                  ? {
-                      ...p,
-                      registerLoading: false,
-                      registerSuccess: true,
-                      progressMsg: "종합 채점 완료 (3단계 대시보드에서 확인 가능)"
-                    }
-                  : p
-              )
-            );
-          } catch (deepErr: any) {
-            console.error("자동 대시보드 종합 채점 연동 실패:", deepErr);
-            setUploadedFiles(prev =>
-              prev.map(p =>
-                p.id === item.id
-                  ? {
-                      ...p,
-                      registerLoading: false,
-                      status: "error",
-                      errorMsg: deepErr.message || "종합 AI 채점 과정에서 오류가 발생했습니다."
-                    }
-                  : p
-              )
-            );
-          }
-        } else {
-          throw new Error("서류 안에서 평가 정합성을 갖춘 텍스트를 찾지 못했습니다.");
         }
-      } catch (err: any) {
-        clearInterval(progressInterval);
-        setUploadedFiles(prev =>
-          prev.map(p =>
-            p.id === item.id
-              ? {
-                  ...p,
-                  status: "error",
-                  errorMsg: err.message || "파일 업로드 분석 장애가 발생했습니다."
-                }
-              : p
-          )
-        );
-      }
-    }
+      })
+    );
   };
 
   const handleInspectAndEdit = (item: UploadedFileItem) => {
@@ -268,7 +302,7 @@ export default function CandidateForm({
         planText: item.result.planText,
         policyBonus: 0,
         detectedPersonalInfo: item.result.detectedPersonalInfo
-      });
+      }, true);
 
       setUploadedFiles(prev =>
         prev.map(p => p.id === item.id ? { ...p, registerLoading: false, registerSuccess: true } : p)
@@ -397,7 +431,7 @@ export default function CandidateForm({
           id="mode-upload-btn"
         >
           <UploadCloud className="w-4 h-4" />
-          입사서류 PDF/TXT 자동 판독 모드
+          입사서류 자동 판독 모드 (PDF/TXT/DOCX/이미지)
         </button>
         <button
           type="button"
@@ -420,7 +454,7 @@ export default function CandidateForm({
           <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
           <div className="flex-1">
             <p className="font-bold">{uploadSuccessMessage}</p>
-            <p className="text-[11px] text-emerald-700/80 mt-1">이력서와 자기소개서 내용이 복구되어 아래 편집창에 자동 적재되었습니다. 아래 값들을 검토한 후 하단의 ‘서류 종합 정밀분석 실행’ 버튼을 누르시면 종합 AI 스크리닝 채점이 실행됩니다.</p>
+            <p className="text-[11px] text-emerald-700/80 mt-1">입사지원서와 자기소개서 내용이 복구되어 아래 편집창에 자동 적재되었습니다. 아래 값들을 검토한 후 하단의 ‘서류 종합 정밀분석 실행’ 버튼을 누르시면 종합 AI 스크리닝 채점이 실행됩니다.</p>
           </div>
           <button 
             type="button" 
@@ -439,7 +473,7 @@ export default function CandidateForm({
             <div>
               <h3 className="font-sans font-semibold text-slate-800 text-sm">지원서 파일 다중 판독 및 벌크 대기열</h3>
               <p className="text-xs text-slate-500 leading-relaxed mt-1">
-                여성지원자들의 PDF, TXT 형식 입사지리서 및 자기소개서 파일을 복수 선택하여 동시에 업로드할 수 있습니다.<br />
+                여성지원자들의 PDF, TXT, DOCX, 이미지(PNG/JPG/WEBP/GIF) 형식 입사지원서 및 자기소개서 파일을 복수 선택하여 동시에 업로드할 수 있습니다.<br />
                 AI가 각 파일의 정보를 순차적으로 디코딩하여 성함 자동추출, 이력 요약, 그리고 규정에 어긋난 아웃라이어 정보(나이/학교명/가족관계 등) 유실 방지 검열을 독립 실시합니다.
               </p>
             </div>
@@ -468,7 +502,7 @@ export default function CandidateForm({
             <label className="cursor-pointer space-y-3 block w-full py-4">
               <input
                 type="file"
-                accept=".pdf,.txt,text/plain"
+                accept=".pdf,.txt,.docx,.doc,.png,.jpg,.jpeg,.gif,.webp,application/pdf,text/plain,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword,image/*"
                 onChange={handleFileChange}
                 multiple
                 className="hidden"
@@ -478,7 +512,7 @@ export default function CandidateForm({
               </div>
               <div className="space-y-1.5 px-4 animate-fade-in">
                 <p className="text-xs font-bold text-slate-800">
-                  여기에 구직 서류(PDF/TXT) 파일들을 끌어다 놓거나 클릭하여 다중 선택하십시오
+                  여기에 구직 서류(PDF/TXT/DOCX/이미지) 파일들을 끌어다 놓거나 클릭하여 다중 선택하십시오
                 </p>
                 <p className="text-[10px] text-slate-400 font-medium">
                   다중 파일 동시 분석 지원 • 개별 최대 10MB 크기 제한 • 법정비공개 정보 차단 가동
@@ -729,7 +763,7 @@ export default function CandidateForm({
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-600 mb-1.5">이력 및 경력내용 (이력서 텍스트 붙여넣기)</label>
+            <label className="block text-xs font-bold text-slate-600 mb-1.5">이력 및 경력내용 (입사지원서 텍스트 붙여넣기)</label>
             <textarea
               value={fastResume}
               onChange={(e) => setFastResume(e.target.value)}

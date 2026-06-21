@@ -2,6 +2,7 @@ import express from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
 import dotenv from "dotenv";
+import mammoth from "mammoth";
 import { GoogleGenAI, Type } from "@google/genai";
 import { 
   JobType, 
@@ -17,12 +18,33 @@ dotenv.config();
 const app = express();
 const PORT = 3000;
 
+function isQuotaExceededError(err: any): boolean {
+  if (!err) return false;
+  const errMsg = String(err.message || err.statusText || err).toLowerCase();
+  return errMsg.includes("quota") || errMsg.includes("exhausted") || errMsg.includes("limit") || errMsg.includes("spending cap") || errMsg.includes("429");
+}
+
 // Apply JSON body size limits for larger resume texts
 app.use(express.json({ limit: "15mb" }));
 
 // Initialize GoogleGenAI lazily as instructed by SDK guidelines
 let aiClient: GoogleGenAI | null = null;
-function getGeminiClient(): GoogleGenAI | null {
+function getGeminiClient(customKey?: string): GoogleGenAI | null {
+  if (customKey && customKey.trim() !== "") {
+    try {
+      return new GoogleGenAI({
+        apiKey: customKey.trim(),
+        httpOptions: {
+          headers: {
+            'User-Agent': 'aistudio-build-custom',
+          }
+        }
+      });
+    } catch (e) {
+      console.log("Failed to initialize GoogleGenAI client with custom key:", e);
+    }
+  }
+
   if (!aiClient) {
     const key = process.env.GEMINI_API_KEY;
     if (key && key !== "MY_GEMINI_API_KEY" && key.trim() !== "") {
@@ -36,7 +58,7 @@ function getGeminiClient(): GoogleGenAI | null {
           }
         });
       } catch (e) {
-        console.error("Failed to initialize GoogleGenAI client:", e);
+        console.log("Failed to initialize GoogleGenAI client (will default to high-fidelity offline analyzer):", e);
       }
     }
   }
@@ -204,7 +226,7 @@ function analyzeFallback(
     tier = '검토(조건부)';
   } else {
     oneLineComment = "제출된 서류상 가치 평가 근거가 부족하며, 직무수행 및 적합도 전반의 추가 보완검증 권장";
-    longComments = `전반적으로 이력서와 소개서의 분량이 협소하고 추상적인 서술이 대다수입니다. 면접 전 직무수행계획서를 요구하거나, 면접장에서 직무 기초와 직인 역량을 입체적으로 타진해야 합니다.`;
+    longComments = `전반적으로 입사지원서와 소개서의 분량이 협소하고 추상적인 서술이 대다수입니다. 면접 전 직무수행계획서를 요구하거나, 면접장에서 직무 기초와 직인 역량을 입체적으로 타진해야 합니다.`;
     categoryLabel = '전반보완필요';
     tier = '보류';
   }
@@ -261,7 +283,10 @@ function analyzeFallback(
       civilCulture: civilCultureQuestions,
       unverified: unverifiedQuestions
     },
-    suggestedDocuments: planText.trim().length > 0 ? ["경력증명서", "자격증 사본"] : ["직무수행계획서 추가 확보", "경력증명서"]
+    suggestedDocuments: planText.trim().length > 0 ? ["경력증명서", "자격증 사본"] : ["직무수행계획서 추가 확보", "경력증명서"],
+    resumeText,
+    selfIntroText,
+    planText: planText || ""
   };
 }
 
@@ -274,12 +299,14 @@ async function analyzeWithGemini(
   selfIntroText: string,
   planText: string = "",
   policyBonus: number = 0,
-  centerInfo: CenterInfo
+  centerInfo: CenterInfo,
+  customKey?: string
 ): Promise<Candidate> {
-  const client = getGeminiClient();
+  const client = getGeminiClient(customKey);
   if (!client) {
     console.log("No Gemini API key found or client initialization failed. Falling back to rule-based engine.");
-    return analyzeFallback(name, resumeText, selfIntroText, planText, policyBonus, centerInfo);
+    const fallbackVal = analyzeFallback(name, resumeText, selfIntroText, planText, policyBonus, centerInfo);
+    return { ...fallbackVal, isFallback: true };
   }
 
   const prompt = `
@@ -295,7 +322,7 @@ async function analyzeWithGemini(
 
 ## 지원자 제출 자료:
 - 이름: ${name}
-- 이력 및 경력내용 (이력서):
+- 이력 및 경력내용 (입사지원서):
 ${resumeText}
 - 자기소개서:
 ${selfIntroText}
@@ -425,11 +452,25 @@ ${planText || "미제출"}
         plan: planText.trim().length > 10
       },
       policyBonus,
+      resumeText,
+      selfIntroText,
+      planText: planText || "",
       ...resObj
     };
-  } catch (error) {
-    console.error("Gemini call failed, defaulting to rule engine:", error);
-    return analyzeFallback(name, resumeText, selfIntroText, planText, policyBonus, centerInfo);
+  } catch (error: any) {
+    const isQuota = isQuotaExceededError(error);
+    const shortMsg = error.message ? error.message.split("\n")[0] : String(error);
+    if (isQuota) {
+      console.log(`[Gemini SDK Quota Notice] Candidate evaluation Gemini call fell back cleanly to local rule engine (RESOURCE_EXHAUSTED): ${shortMsg}`);
+    } else {
+      console.log(`[Gemini SDK Warning] Candidate evaluation Gemini call fell back to local rule engine: ${shortMsg}`);
+    }
+    const fallbackVal = analyzeFallback(name, resumeText, selfIntroText, planText, policyBonus, centerInfo);
+    return { 
+      ...fallbackVal, 
+      isFallback: true, 
+      geminiQuotaExceeded: isQuota 
+    };
   }
 }
 
@@ -440,7 +481,9 @@ app.post("/api/analyze-job-competencies", async (req, res) => {
     return res.status(400).json({ error: "Missing jobTitle parameter." });
   }
 
-  const client = getGeminiClient();
+  let isQuotaExceeded = false;
+  const customKey = req.headers["x-gemini-api-key"];
+  const client = getGeminiClient(typeof customKey === "string" ? customKey : undefined);
   if (client) {
     try {
       const prompt = `
@@ -482,8 +525,14 @@ app.post("/api/analyze-job-competencies", async (req, res) => {
       const responseText = response.text?.trim() || "[]";
       const parsed = JSON.parse(responseText);
       return res.json({ competencies: parsed });
-    } catch (e) {
-      console.error("Gemini job competency generation failed, falling back", e);
+    } catch (e: any) {
+      isQuotaExceeded = isQuotaExceededError(e);
+      const shortMsg = e.message ? e.message.split("\n")[0] : String(e);
+      if (isQuotaExceeded) {
+        console.log(`[Gemini SDK Quota Notice] Competency generation fell back cleanly to offline database (RESOURCE_EXHAUSTED): ${shortMsg}`);
+      } else {
+        console.log(`[Gemini SDK Warning] Competency generation fell back cleanly to offline database: ${shortMsg}`);
+      }
     }
   }
 
@@ -528,7 +577,11 @@ app.post("/api/analyze-job-competencies", async (req, res) => {
   };
 
   const selectedFallback = fallbacks[jobType] || fallbacks["상담직"];
-  res.json({ competencies: selectedFallback });
+  res.json({ 
+    competencies: selectedFallback, 
+    isFallback: true, 
+    geminiQuotaExceeded: isQuotaExceeded || !client 
+  });
 });
 
 function extractNameFromFileName(fileName: string): string {
@@ -653,15 +706,103 @@ function fallbackParseDocument(base64CharString: string, mimeType: string, fileN
   };
 }
 
+const GEMINI_SUPPORTED_MIMES = [
+  "application/pdf",
+  "text/plain",
+  "text/html",
+  "text/css",
+  "text/md",
+  "text/csv",
+  "text/xml",
+  "image/png",
+  "image/jpeg",
+  "image/webp",
+  "image/gif",
+  "image/heic",
+  "image/heif",
+  "audio/wav",
+  "audio/mp3",
+  "audio/ogg",
+  "audio/flac",
+  "audio/aac",
+  "video/mp4",
+  "video/quicktime"
+];
+
+function isGeminiSupportedMime(mime: string): boolean {
+  if (!mime) return false;
+  const m = mime.toLowerCase();
+  if (m.startsWith("text/")) return true;
+  return GEMINI_SUPPORTED_MIMES.some(supported => m.startsWith(supported) || supported.startsWith(m));
+}
+
+function extractCleanTextFromBinary(base64Data: string): string {
+  try {
+    let base64CharString = base64Data;
+    if (base64Data.includes(";base64,")) {
+      base64CharString = base64Data.split(";base64,").pop() || "";
+    }
+    const buffer = Buffer.from(base64CharString, 'base64');
+    const decodedUtf8 = buffer.toString('utf8');
+    
+    // Support ASCII, Hangul syllables (\uAC00-\uD7A3), Korean Jamo (\u3130-\u318F), and common punctuation
+    const cleaned = decodedUtf8.replace(/[^\uAC00-\uD7A3\u3130-\u318F\u1100-\u11FFa-zA-Z0-9\s.,;:!?@()\'\"\[\]\-–\/*><_=+~` \n\r\t]/g, '');
+    const cleanNoSpace = cleaned.replace(/\s/g, '');
+    
+    if (cleanNoSpace.length > 50) {
+      return cleaned.trim();
+    }
+  } catch (err) {
+    console.log("Failed to extract text from file:", err);
+  }
+  return "";
+}
+
 app.post("/api/parse-document-candidate", async (req, res) => {
-  const { fileData, mimeType, fileName } = req.body;
+  let { fileData, mimeType, fileName } = req.body;
   if (!fileData || !mimeType) {
     return res.status(400).json({ error: "선택된 파일의 바이너리 또는 MimeType 정보가 누락되었습니다." });
   }
 
-  const client = getGeminiClient();
+  // Normalize image types for Gemini
+  const lowerMime = mimeType.toLowerCase();
+  if (lowerMime === "image/jpg") {
+    mimeType = "image/jpeg";
+  }
+
+  const customKey = req.headers["x-gemini-api-key"];
+  const client = getGeminiClient(typeof customKey === "string" ? customKey : undefined);
   if (!client) {
-    console.warn("No Gemini client configured, using high-fidelity heuristic offline analyzer");
+    console.log("No Gemini client configured, using high-fidelity heuristic offline analyzer");
+    const fallbackResult = fallbackParseDocument(fileData, mimeType, fileName || "");
+    return res.json({ result: fallbackResult, isFallback: true });
+  }
+
+  const isSupported = isGeminiSupportedMime(mimeType);
+  const isDocx = mimeType.includes("officedocument.wordprocessingml") || mimeType.includes("msword") || (fileName && (fileName.toLowerCase().endsWith(".docx") || fileName.toLowerCase().endsWith(".doc")));
+
+  let extractedText = "";
+  if (isDocx) {
+    try {
+      let base64CharString = fileData;
+      if (fileData.includes(";base64,")) {
+        base64CharString = fileData.split(";base64,").pop() || "";
+      }
+      const buffer = Buffer.from(base64CharString, 'base64');
+      const mammothResult = await mammoth.extractRawText({ buffer });
+      extractedText = mammothResult.value || "";
+      console.log(`Successfully extracted ${extractedText.length} characters from DOCX using mammoth.`);
+    } catch (docxErr) {
+      console.log("Failed to parse DOCX using mammoth:", docxErr);
+      extractedText = extractCleanTextFromBinary(fileData);
+    }
+  } else if (!isSupported) {
+    extractedText = extractCleanTextFromBinary(fileData);
+  }
+
+  // If MIME type is not supported and we cannot recover clean readable text, immediately use fallback (prevents Gemini 400 Unsupported MIME type error)
+  if (!isSupported && !extractedText) {
+    console.info(`MIME type '${mimeType}' is not natively supported by Gemini, and file does not contain plain readable text. Using heuristic high-fidelity offline analyzer directly.`);
     const fallbackResult = fallbackParseDocument(fileData, mimeType, fileName || "");
     return res.json({ result: fallbackResult });
   }
@@ -672,9 +813,9 @@ app.post("/api/parse-document-candidate", async (req, res) => {
       base64CharString = fileData.split(";base64,").pop() || "";
     }
 
-    const response = await client.models.generateContent({
-      model: "gemini-3.5-flash",
-      contents: [
+    let contents: any[];
+    if (isSupported) {
+      contents = [
         {
           inlineData: {
             data: base64CharString,
@@ -682,7 +823,7 @@ app.post("/api/parse-document-candidate", async (req, res) => {
           }
         },
         `당신은 대한민국 여성새로일하기센터(새일센터) 전문 채용 심사 AI 비서입니다.
-첨부된 지원 서류(입사지원서, 이력서, 자기소개서, 직무수행계획서 중 하나 이상이 병합된 PDF/텍스트 문서)를 정밀 분석 및 판독(OCR)하여, 공정채용 서류 심사에 등록될 수 있도록 객관적으로 정제해 주십시오.
+첨부된 지원 서류(입사지원서, 자기소개서, 직무수행계획서 중 하나 이상이 병합된 PDF/텍스트 문서)를 정밀 분석 및 판독(OCR)하여, 공정채용 서류 심사에 등록될 수 있도록 객관적으로 정제해 주십시오.
 
 반드시 다음 규칙을 준수하여 JSON 형태로 분석을 발급하십시오:
 1. 'name': 지원자의 성함명을 한문이나 영어를 정돈하여 한글 성함으로 판독합니다. (성함 정보가 완전히 누락된 경우 미상 또는 파일명 등을 추정할 수 있게 '무명자' 등으로 기재).
@@ -692,7 +833,29 @@ app.post("/api/parse-document-candidate", async (req, res) => {
 5. 'detectedPersonalInfo': 이 문서는 공정채용 서무 원칙(새일센터 내규)을 지켜야 하므로, 이 서류 내부에서 검출된 사적인 개인 식별 정보(예: '삼척여자상업학교 졸업', '1982년생', '가정주부 자녀 2명 지출비 필요', '사진 부착 여부' 등)를 명징하게 한 줄로 요지 정리해 줍니다. 이 정보는 블라인드 마스킹용 로그로 투명하게 등록되고 원 채점에서는 완전 배제할 수 있도록 가감없이 검출해야 합니다.
 
 출력은 반드시 지정된 JSON 구조여야 하며, 백틱 등이나 서론/결론과 같은 다른 수식 문장은 무시하십시오.`
-      ],
+      ];
+    } else {
+      contents = [
+        `당신은 대한민국 여성새로일하기센터(새일센터) 전문 채용 심사 AI 비서입니다.
+아래에 지원 서류 파일(파일명: ${fileName || "문서"})로부터 특수 추출해낸 원문 텍스트가 기재되어 있습니다. 이 파일 본문을 정밀 탐색하여 공정채용 서류 심사를 위한 정보를 완벽하게 정제하십시오.
+
+[지원 서류 추출 본문]
+${extractedText}
+
+반드시 다음 규칙을 준수하여 JSON 형태로 분석을 발급하십시오:
+1. 'name': 지원자의 성함명을 신중하게 찾아 단정한 한글 성함으로 판독합니다. (완전 누락 시 파일명이나 맥락을 참작하여 '명확화 불가' 또는 추적 명칭으로 기재).
+2. 'resumeText': 학력 서열 정보, 나이, 결혼 여부 등 불필요한 기재는 절대 제외하며, 오직 지원자가 가진 실무 자격증, 면허, 과거 직장 이력(소속, 수행 업무 내용, 일한 개월수)만을 마크다운 표나 리스트로 정제하십시오.
+3. 'selfIntroText': 자기소개 본질적인 내용(지원 배경, 역경 극복, 갈등 해소 에피소드)을 부드러운 한국어 텍스트 문단으로 온전히 복구하여 추출합니다.
+4. 'planText': 직무에 임하는 수행 계획이나 다짐이 있다면 구 성실하게 구성하고, 없다면 빈 문자열("")로 보전합니다.
+5. 'detectedPersonalInfo': 채용절차법 및 블라인드 채용 가이드에 의거하여 나이, 성별, 기혼여부, 학벌 상징성(예: 'OO대 졸업'), 지나친 사적 여건 등 블라인드 처리가 요구되는 모든 민감 개인식정 사항을 일목요연하게 찾아내어 기술합니다.
+
+출력은 반드시 지정된 JSON 구조여야 하며, 백틱 등이나 서론/결론과 같은 다른 수식 문장은 무시하십시오.`
+      ];
+    }
+
+    const response = await client.models.generateContent({
+      model: "gemini-3.5-flash",
+      contents,
       config: {
         responseMimeType: "application/json",
         responseSchema: {
@@ -713,13 +876,58 @@ app.post("/api/parse-document-candidate", async (req, res) => {
     const parsed = JSON.parse(text);
     return res.json({ result: parsed });
   } catch (error: any) {
-    console.warn("Failed to parse document with Gemini (rate limit/quota), falling back to offline parser:", error);
+    const isQuota = isQuotaExceededError(error);
+    const shortMsg = error.message ? error.message.split("\n")[0] : String(error);
+    if (isQuota) {
+      console.log(`[Gemini SDK Quota Notice] Document parsing fell back cleanly to offline parser (RESOURCE_EXHAUSTED): ${shortMsg}`);
+    } else {
+      console.log(`[Gemini SDK Warning] Document parsing fell back cleanly to offline parser: ${shortMsg}`);
+    }
     try {
       const fallbackResult = fallbackParseDocument(fileData, mimeType, fileName || "");
-      return res.json({ result: fallbackResult });
+      return res.json({ 
+        result: fallbackResult, 
+        isFallback: true, 
+        geminiQuotaExceeded: isQuota 
+      });
     } catch (fallbackErr: any) {
       return res.status(500).json({ error: `파일 판독 및 AI 인덱싱 중 오류가 발생했습니다: ${fallbackErr.message || fallbackErr}` });
     }
+  }
+});
+
+app.post("/api/verify-key", async (req, res) => {
+  const { apiKey } = req.body;
+  if (!apiKey || apiKey.trim() === "") {
+    return res.status(400).json({ valid: false, error: "API 키가 입력되지 않았습니다." });
+  }
+
+  try {
+    const testClient = new GoogleGenAI({
+      apiKey: apiKey.trim(),
+      httpOptions: {
+        headers: {
+          'User-Agent': 'aistudio-build-verification',
+        }
+      }
+    });
+
+    const response = await testClient.models.generateContent({
+      model: "gemini-3.5-flash",
+      contents: "Hello",
+    });
+
+    if (response) {
+      return res.json({ valid: true });
+    } else {
+      throw new Error("API 응답이 비어있습니다.");
+    }
+  } catch (error: any) {
+    console.log("Gemini API key verification failed:", error);
+    return res.json({ 
+      valid: false, 
+      error: error.message || "Google Gemini API 키 검증에 실패했습니다. 올바른 키인지 확인하십시오." 
+    });
   }
 });
 
@@ -729,13 +937,15 @@ app.post("/api/analyze-candidate", async (req, res) => {
     return res.status(400).json({ error: "Missing required screening parameters." });
   }
 
+  const customKey = req.headers["x-gemini-api-key"];
   const result = await analyzeWithGemini(
     name,
     resumeText,
     selfIntroText,
     planText || "",
     policyBonus || 0,
-    centerInfo
+    centerInfo,
+    typeof customKey === "string" ? customKey : undefined
   );
   res.json(result);
 });

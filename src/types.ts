@@ -75,6 +75,15 @@ export interface Candidate {
 
   // 추가 서류
   suggestedDocuments: string[];
+  
+  // 원본 서류 텍스트 저장용 (근거 추출용)
+  resumeText?: string;
+  selfIntroText?: string;
+  planText?: string;
+
+  // 오프라인 폴백/할당량 추적용 필드
+  isFallback?: boolean;
+  geminiQuotaExceeded?: boolean;
 }
 
 export interface CenterInfo {
@@ -84,6 +93,8 @@ export interface CenterInfo {
   customProfile?: WeightProfile;
   requirements: {
     coreCompetencies: string[];
+    coreCompetencySources?: Record<string, string>;
+    coreCompetencyDescriptions?: Record<string, string>;
     certificates: string[];
     requiredExperienceMonths: number;
     orgCulture: string;

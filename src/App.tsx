@@ -7,6 +7,7 @@ import CandidateDashboard, { auditCandidateScores } from "./components/Candidate
 import CandidateDetailsPanel from "./components/CandidateDetailsPanel";
 import InitialSetupWizard from "./components/InitialSetupWizard";
 import LandingPage from "./components/LandingPage";
+import ApiKeyModal from "./components/ApiKeyModal";
 import { 
   Building2, 
   Trash2, 
@@ -21,7 +22,9 @@ import {
   ArrowRight,
   ArrowLeft,
   Plus,
-  HelpCircle
+  HelpCircle,
+  Key,
+  Loader2
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -65,7 +68,9 @@ export default function App() {
     return INITIAL_CENTER_INFO;
   });
 
-  const [isSetupComplete, setIsSetupComplete] = useState<boolean>(false);
+  const [isSetupComplete, setIsSetupComplete] = useState<boolean>(() => {
+    return localStorage.getItem("saerong_setup_complete_v3.1") === "true";
+  });
 
   const [showWizardDirectly, setShowWizardDirectly] = useState<boolean>(false);
 
@@ -102,6 +107,69 @@ export default function App() {
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [candidateToDelete, setCandidateToDelete] = useState<{ id: string; name: string } | null>(null);
 
+  // Queue tracking for bulk uploaded files
+  const [queueCompleted, setQueueCompleted] = useState<number>(0);
+  const [queueTotal, setQueueTotal] = useState<number>(0);
+  const [queueProcessing, setQueueProcessing] = useState<boolean>(false);
+  const [justFinishedBatch, setJustFinishedBatch] = useState<boolean>(false);
+
+  const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState<boolean>(false);
+  const [hasUserApiKey, setHasUserApiKey] = useState<boolean>(() => {
+    return !!localStorage.getItem("user_gemini_api_key_v3.1");
+  });
+  const [isQuotaExceeded, setIsQuotaExceeded] = useState<boolean>(false);
+  const [shortcutFeedback, setShortcutFeedback] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleQuotaExceeded = () => {
+      setIsQuotaExceeded(true);
+    };
+    window.addEventListener("gemini-quota-exceeded", handleQuotaExceeded);
+    return () => {
+      window.removeEventListener("gemini-quota-exceeded", handleQuotaExceeded);
+    };
+  }, []);
+
+  // Shortcut key listener for fast toggle between Setup Mode (Step 1) and Dashboard Mode (Step 3)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const isS = e.key === "s" || e.key === "S" || e.keyCode === 83;
+      const hasModifiers = (e.ctrlKey || e.metaKey) && e.shiftKey;
+
+      if (hasModifiers && isS) {
+        e.preventDefault();
+        setCurrentMainStep(prev => {
+          let nextStep = 1;
+          let feedbackText = "";
+          if (prev === 1) {
+            nextStep = 3;
+            feedbackText = "3단계. AI 종합 평정 대시보드로 즉시 전환되었습니다.";
+          } else {
+            nextStep = 1;
+            feedbackText = "1단계. 심사 기준 설정으로 즉시 전환되었습니다.";
+          }
+          setShortcutFeedback(feedbackText);
+          return nextStep;
+        });
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+
+  // Clear shortcut feedback notification after a brief period
+  useEffect(() => {
+    if (shortcutFeedback) {
+      const timer = setTimeout(() => {
+        setShortcutFeedback(null);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [shortcutFeedback]);
+
   const [currentMainStep, setCurrentMainStep] = useState<number>(() => {
     try {
       const savedCand = localStorage.getItem(LOCAL_STORAGE_CANDIDATES_KEY);
@@ -123,6 +191,33 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem("saerong_filter_registered_v3.1", String(filterRegisteredOnly));
   }, [filterRegisteredOnly]);
+
+  const [dashboardViewMode, setDashboardViewMode] = useState<"card" | "table font-bold">(() => {
+    return (localStorage.getItem("saerong_dashboard_view_mode_v3.1") as "card" | "table") || "card";
+  });
+
+  useEffect(() => {
+    // strip out auxiliary tailwind class names if they accidentally leak
+    const cleanMode = dashboardViewMode.includes("table") ? "table" : "card";
+    localStorage.setItem("saerong_dashboard_view_mode_v3.1", cleanMode);
+  }, [dashboardViewMode]);
+
+  // Track start of a file processing batch to trigger automatic transition on completion
+  useEffect(() => {
+    if (queueProcessing) {
+      setJustFinishedBatch(true);
+    }
+  }, [queueProcessing]);
+
+  useEffect(() => {
+    if (justFinishedBatch && !queueProcessing && queueTotal > 0 && queueCompleted === queueTotal) {
+      setJustFinishedBatch(false);
+      const timer = setTimeout(() => {
+        setCurrentMainStep(3);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [justFinishedBatch, queueProcessing, queueTotal, queueCompleted]);
 
   const displayedCandidates = filterRegisteredOnly
     ? candidates.filter(c => !c.id.startsWith("cand_preset_"))
@@ -146,14 +241,18 @@ export default function App() {
     }
   }, [candidates, selectedCandidateId, filterRegisteredOnly]);
 
-  const handleAnalyzeCandidate = async (input: CandidateRawInput) => {
+  const handleAnalyzeCandidate = async (input: CandidateRawInput, skipNavigation?: boolean) => {
     setIsLoading(true);
     setErrorMessage(null);
 
     try {
+      const userApiKey = localStorage.getItem("user_gemini_api_key_v3.1");
       const response = await fetch("/api/analyze-candidate", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          ...(userApiKey ? { "x-gemini-api-key": userApiKey } : {})
+        },
         body: JSON.stringify({
           name: input.name,
           resumeText: input.resumeText,
@@ -169,6 +268,10 @@ export default function App() {
       }
 
       const analyzedCandidate: Candidate = await response.json();
+      
+      if (analyzedCandidate.geminiQuotaExceeded) {
+        setIsQuotaExceeded(true);
+      }
       
       // Force direct matching logic with center settings just in case
       // (This overrides any loose policy values generated by server)
@@ -186,7 +289,9 @@ export default function App() {
       });
 
       setSelectedCandidateId(analyzedCandidate.id);
-      setCurrentMainStep(3); // 구직서류 분석 시 3단계 AI평정 대시보드로 가로 전환!
+      if (!skipNavigation) {
+        setCurrentMainStep(3); // 구직서류 분석 시 3단계 AI평정 대시보드로 가로 전환!
+      }
     } catch (error: any) {
       console.error(error);
       setErrorMessage(error.message || "서버와 통신하는 과정에서 예외가 발생했습니다.");
@@ -329,26 +434,45 @@ export default function App() {
 
   if (!isSetupComplete && !showWizardDirectly) {
     return (
-      <LandingPage 
-        onStartSetup={() => setShowWizardDirectly(true)}
-        onQuickLoadSample={handleQuickLoadSample}
-      />
+      <>
+        <LandingPage 
+          onStartSetup={() => setShowWizardDirectly(true)}
+          onQuickLoadSample={handleQuickLoadSample}
+          onOpenApiKeyModal={() => setIsApiKeyModalOpen(true)}
+          hasUserApiKey={hasUserApiKey}
+        />
+        <ApiKeyModal
+          isOpen={isApiKeyModalOpen}
+          onClose={() => setIsApiKeyModalOpen(false)}
+          onSave={() => {
+            setHasUserApiKey(true);
+            setIsApiKeyModalOpen(false);
+            setShowWizardDirectly(true);
+          }}
+          onClear={() => setHasUserApiKey(false)}
+        />
+      </>
     );
   }
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans" id="recruiter-app-viewport">
       {/* Upper Navigation Bar - Professional Polish Edition */}
-      <header className="bg-slate-900 text-white border-b border-slate-800 sticky top-0 z-40 px-6 py-4 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 shadow-md shrink-0">
+      <header className="bg-slate-950 text-white border-b border-slate-850 sticky top-0 z-40 px-6 py-4 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 shadow-md shrink-0">
         <div className="space-y-1">
           <h1 className="font-sans font-extrabold text-white text-xl leading-tight flex flex-wrap items-center gap-2">
-            <span className="bg-indigo-600 px-2.5 py-0.5 rounded text-[10px] font-bold font-mono tracking-wider">v3.1 최종</span>
+            <span className="bg-slate-800 px-2.5 py-0.5 rounded-sm text-[10px] font-extrabold font-mono tracking-wider">v3.1 최종</span>
             <span>{centerInfo.centerName.startsWith(centerInfo.region) ? centerInfo.centerName : `${centerInfo.region} ${centerInfo.centerName}`} 채용 분석 시스템</span>
           </h1>
           <p className="text-xs text-slate-400 font-sans leading-relaxed">
             채용 직무: <span className="text-slate-200 font-medium">{centerInfo.customProfile?.jobTitle || centerInfo.targetJobType}</span> | 
             가중치 배율: <span className="text-slate-200 font-medium">직무 {centerInfo.customProfile?.ratioJobPerformance}% : 조직적합 {centerInfo.customProfile?.ratioCultureSync}%</span> | 
             상태: <span className="text-emerald-400 font-medium inline-flex items-center gap-1">● 법정보호 마스킹 활성</span>
+            {hasUserApiKey ? (
+              <span className="text-cyan-400 font-medium ml-2 inline-flex items-center gap-1">| 🔑 개인 API 키 연결 상태</span>
+            ) : (
+              <span className="text-slate-400 font-medium ml-2 inline-flex items-center gap-1">| 🔑 기본 무료 분석 모드</span>
+            )}
           </p>
         </div>
 
@@ -357,13 +481,26 @@ export default function App() {
           <div className="flex items-center gap-2">
             <button
               type="button"
+              onClick={() => setIsApiKeyModalOpen(true)}
+              className={`py-1.5 px-3.5 rounded-sm transition-all duration-150 flex items-center justify-center gap-1.5 font-sans text-xs font-bold cursor-pointer border ${
+                hasUserApiKey 
+                  ? "bg-emerald-950 hover:bg-emerald-900 text-emerald-300 border-emerald-800" 
+                  : "bg-slate-900 hover:bg-slate-800 text-indigo-300 border-slate-800"
+              }`}
+              id="api-key-mgmt-btn"
+            >
+              <Key className="w-3.5 h-3.5 text-amber-400" />
+              {hasUserApiKey ? "Gemini API 키 등록됨" : "Gemini API 키 등록"}
+            </button>
+            <button
+              type="button"
               onClick={() => {
                 setIsSetupComplete(false);
                 setShowWizardDirectly(false);
               }}
-              className="py-1.5 px-3 bg-slate-850 hover:bg-slate-700 text-slate-200 border border-slate-700 font-sans text-xs font-bold rounded-lg transition-all duration-150 flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
+              className="py-1.5 px-3 bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 font-sans text-xs font-bold rounded-sm transition-all duration-150 flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
             >
-              <HelpCircle className="w-3.5 h-3.5 text-indigo-400" />
+              <HelpCircle className="w-3.5 h-3.5 text-slate-400" />
               시스템 소개(홈)
             </button>
             <button
@@ -372,7 +509,7 @@ export default function App() {
                 setIsSetupComplete(false);
                 setShowWizardDirectly(true);
               }}
-              className="py-1.5 px-3.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-sans text-xs font-bold rounded-lg transition-all duration-150 flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
+              className="py-1.5 px-3.5 bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 font-sans text-xs font-bold rounded-sm transition-all duration-150 flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
               id="run-wizard-btn"
             >
               <Sparkles className="w-3.5 h-3.5 text-amber-400" />
@@ -383,7 +520,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={handleExportTextReport}
-                  className="py-1.5 px-3.5 bg-indigo-600 hover:bg-indigo-700 border border-transparent text-white font-sans text-xs font-bold rounded-lg transition-all duration-150 flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
+                  className="py-1.5 px-3.5 bg-white hover:bg-slate-100 text-slate-950 border border-slate-300 font-sans text-xs font-bold rounded-sm transition-all duration-150 flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
                   id="export-text-btn"
                 >
                   <Download className="w-3.5 h-3.5" />
@@ -392,7 +529,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={handleClearCandidates}
-                  className="py-1.5 px-3.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-sans text-xs font-bold rounded-lg transition-all duration-150 flex items-center justify-center gap-1.5 cursor-pointer"
+                  className="py-1.5 px-3.5 bg-slate-800 hover:bg-slate-750 text-slate-200 border border-slate-700 font-sans text-xs font-bold rounded-sm transition-all duration-150 flex items-center justify-center gap-1.5 cursor-pointer"
                   id="clear-all-btn"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
@@ -408,7 +545,7 @@ export default function App() {
               <p className="text-[10px] text-slate-500 uppercase tracking-wider font-mono font-bold">Evaluator Mode</p>
               <p className="text-xs font-bold text-slate-300 italic">HR Specialist Agent</p>
             </div>
-            <div className="w-9 h-9 bg-slate-800 rounded-full flex items-center justify-center border border-slate-700 font-extrabold text-sm text-indigo-400 shadow-inner">
+            <div className="w-9 h-9 bg-slate-800 rounded-sm flex items-center justify-center border border-slate-750 font-extrabold text-sm text-white shadow-inner">
               HR
             </div>
           </div>
@@ -417,7 +554,7 @@ export default function App() {
 
       {/* Horizon Step Navigation Stepper */}
       <div className="bg-white border-b border-slate-200/80 shadow-sm px-6 py-3.5 shrink-0">
-        <div className="max-w-[1600px] mx-auto w-full flex justify-between items-center bg-slate-50/50 p-2 rounded-2xl border border-slate-100">
+        <div className="max-w-[1600px] mx-auto w-full flex flex-col lg:flex-row justify-between items-center gap-3 bg-slate-50/50 p-2 rounded-sm border border-slate-150">
           <div className="flex items-center gap-1.5 md:gap-3 flex-1 justify-around max-w-4xl mx-auto w-full">
             {[
               { id: 1, title: "1단계. 심사 기준 설정", desc: "분석 핵심역량 수립" },
@@ -431,35 +568,68 @@ export default function App() {
                   <button
                     type="button"
                     onClick={() => setCurrentMainStep(item.id)}
-                    className={`flex items-center gap-2.5 text-left focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded-xl p-1.5 md:p-2 hover:bg-white transition-all cursor-pointer ${
-                      isActive ? "bg-white shadow-sm ring-1 ring-slate-100" : ""
+                    className={`flex items-center gap-2.5 text-left focus:outline-none focus:ring-2 focus:ring-slate-950 rounded-sm p-1.5 md:p-2 hover:bg-white transition-all cursor-pointer ${
+                      isActive ? "bg-white shadow-sm ring-1 ring-slate-200" : ""
                     }`}
                   >
-                    <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 transition-all duration-200 ${
+                    <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-sm flex items-center justify-center text-xs font-mono font-extrabold shrink-0 transition-all duration-200 ${
                       isActive 
-                        ? "bg-indigo-600 text-white shadow-sm ring-4 ring-indigo-50" 
+                        ? "bg-slate-950 text-white shadow-sm" 
                         : isCompleted 
-                          ? "bg-indigo-100 text-indigo-700 font-extrabold" 
+                          ? "bg-slate-800 text-slate-100 font-extrabold" 
                           : "bg-slate-200 text-slate-500 border border-slate-300/40"
                     }`}>
                       {isCompleted ? "✓" : item.id}
                     </div>
                     <div className="hidden sm:block">
-                      <p className={`text-xs font-bold leading-tight ${isActive ? "text-indigo-600" : isCompleted ? "text-slate-700" : "text-slate-400"}`}>
+                      <p className={`text-xs font-bold leading-tight ${isActive ? "text-slate-950" : isCompleted ? "text-slate-700" : "text-slate-400"}`}>
                         {item.title}
                       </p>
                       <p className="text-[10px] text-slate-400 font-medium leading-none mt-0.5">{item.desc}</p>
                     </div>
                   </button>
                   {index < 2 && (
-                    <div className={`hidden sm:block flex-1 max-w-[40px] md:max-w-[70px] h-0.5 shrink-0 transition-all duration-300 ${isCompleted ? "bg-indigo-400" : "bg-slate-200"}`} />
+                    <div className={`hidden sm:block flex-1 max-w-[40px] md:max-w-[70px] h-0.5 shrink-0 transition-all duration-300 ${isCompleted ? "bg-slate-800" : "bg-slate-200"}`} />
                   )}
                 </React.Fragment>
               );
             })}
           </div>
+          
+          {/* Quick Toggle Keyboard Shortcut Info */}
+          <div className="hidden lg:flex items-center gap-1.5 bg-white border border-slate-200 shadow-xs px-2.5 py-1 rounded text-[11px] font-sans text-slate-500 shrink-0 select-none animate-fade-in">
+            <span className="font-bold flex items-center gap-0.5">
+              <kbd className="bg-slate-100 border border-slate-250 rounded px-1.5 py-0.5 text-[9px] font-mono shadow-2xs">Ctrl</kbd>+
+              <kbd className="bg-slate-100 border border-slate-250 rounded px-1.5 py-0.5 text-[9px] font-mono shadow-2xs">Shift</kbd>+
+              <kbd className="bg-slate-100 border border-slate-250 rounded px-1.5 py-0.5 text-[9px] font-mono shadow-2xs">S</kbd>
+            </span>
+            <span className="text-slate-400 font-medium ml-1">심사 설정 ↔ 대시보드 고속 전환</span>
+          </div>
         </div>
       </div>
+
+      {/* Quota Exceeded / Fallback Information Banner */}
+      {isQuotaExceeded && (
+        <div className="bg-amber-50 border-b border-amber-200 px-6 py-3.5 flex flex-col md:flex-row justify-between items-start md:items-center gap-3 shrink-0 text-amber-900 text-xs shadow-inner">
+          <div className="flex items-start gap-2.5 font-sans">
+            <AlertCircle className="w-4.5 h-4.5 text-amber-600 mt-0.5 shrink-0" />
+            <div>
+              <p className="font-bold text-amber-950 text-sm">⚠️ 공유 서버용 AI 모델 API 할당량 초과 안내</p>
+              <p className="mt-1 text-amber-850 leading-relaxed font-sans">
+                현재 기본 시스템 탑재 공유 Gemini API의 할당량(RESOURCE_EXHAUSTED)이 초과되어, <strong>하이브리드 고정밀 오프라인 휴리스틱 채점 및 개인정보 블라인드 엔진</strong>으로 자동 하이브리드 전환되었습니다.<br />
+                구인구직 구글 실시간 검색 기반의 맞춤 역량 도정 및 지원서 실시간 OCR 파라메트릭 정밀 AI 인텍싱을 모두 무제한 가동하시려면 우측 상단 <strong>'Gemini API 키 등록'</strong> 단추를 클릭하여 본인의 API 키를 등록 보관해 주시면 즉각 자동 해결됩니다.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsApiKeyModalOpen(true)}
+            className="self-end md:self-center py-2 px-3.5 bg-amber-600 hover:bg-amber-700 text-white font-sans text-xs font-bold rounded shadow-sm transition-all duration-150 cursor-pointer shrink-0"
+          >
+            본인 API 키 등록하기
+          </button>
+        </div>
+      )}
 
       {/* Main Container - Horizon Tab Slide Screen Container */}
       <div className="flex-1 overflow-x-hidden flex flex-col">
@@ -475,10 +645,10 @@ export default function App() {
               transition={{ duration: 0.25 }}
               className="flex-1 p-6 max-w-4xl mx-auto w-full flex flex-col justify-start space-y-6"
             >
-              <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+              <div className="bg-white p-6 rounded border border-slate-250 shadow-none">
                 <div className="mb-6">
-                  <h3 className="font-sans font-bold text-slate-800 text-base mb-1.5 flex items-center gap-2">
-                    <Sparkles className="w-5 h-5 text-indigo-600" />
+                  <h3 className="font-sans font-extrabold text-slate-900 text-base mb-1.5 flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-slate-950" />
                     1단계: 채용 기관 정보 및 직무 가중치 기준 설정
                   </h3>
                   <p className="text-xs text-slate-400 leading-relaxed font-sans">
@@ -496,7 +666,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => setCurrentMainStep(2)}
-                  className="py-3 px-6 bg-indigo-600 hover:bg-indigo-700 text-white font-sans text-xs font-bold rounded-2xl transition-all shadow-sm flex items-center gap-2 cursor-pointer"
+                  className="py-3 px-6 bg-slate-950 hover:bg-slate-900 text-white font-sans text-xs font-bold rounded-sm transition-all shadow-none flex items-center gap-2 cursor-pointer"
                 >
                   <span>2단계 구직서류 등록하러 가기</span>
                   <ArrowRight className="w-4 h-4" />
@@ -517,7 +687,7 @@ export default function App() {
             >
               {/* Error panel if any */}
               {errorMessage && (
-                <div className="p-4 bg-orange-50 border border-orange-200 rounded-2xl flex items-start gap-3 text-xs text-orange-800 font-sans">
+                <div className="p-4 bg-orange-50 border border-orange-200 rounded-sm flex items-start gap-3 text-xs text-orange-850 font-sans">
                   <AlertCircle className="w-4.5 h-4.5 text-orange-600 mt-0.5 shrink-0" />
                   <div>
                     <p className="font-bold">평가 진행 중 일부 제한이 발생했습니다.</p>
@@ -526,23 +696,33 @@ export default function App() {
                 </div>
               )}
 
-              <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-                <div className="px-6 py-4 bg-slate-50 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+              <div className="bg-white rounded border border-slate-250 shadow-none overflow-hidden">
+                <div className="px-6 py-4 bg-slate-50 border-b border-slate-205 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                   <div>
-                    <h3 className="font-sans font-bold text-slate-800 text-base flex items-center gap-2">
-                      <FileCheck className="w-5 h-5 text-indigo-600" />
-                      2단계: 심사 대상 구직서류(이력서 및 자소서) 분석 적재
+                    <h3 className="font-sans font-extrabold text-slate-900 text-base flex items-center gap-2">
+                      <FileCheck className="w-5 h-5 text-slate-950" />
+                      2단계: 심사 대상 구직서류(입사지원서 및 자소서) 분석 적재
                     </h3>
                     <p className="text-[11px] text-slate-400 font-sans mt-0.5">파일을 드래그해 놓거나 가이드 순차 양식을 활용하여 쉽게 수집할 수 있습니다.</p>
                   </div>
                   {candidates.length > 0 && (
                     <button
                       type="button"
-                      onClick={() => setCurrentMainStep(3)}
-                      className="py-1.5 px-3.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-sans text-xs font-bold rounded-xl transition flex items-center gap-1.5 cursor-pointer"
+                      onClick={() => !queueProcessing && setCurrentMainStep(3)}
+                      disabled={queueProcessing}
+                      className="py-1.5 px-3.5 bg-slate-900 hover:bg-slate-800 text-slate-200 font-sans text-xs font-bold rounded-sm transition flex items-center gap-1.5 cursor-pointer disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed"
                     >
-                      <span>대시보드로 바로가기</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
+                      {queueProcessing ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          <span>분석 완료 대기 중...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>대시보드로 바로가기</span>
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </>
+                      )}
                     </button>
                   )}
                 </div>
@@ -553,6 +733,11 @@ export default function App() {
                   isLoading={isLoading}
                   onPreloadSamples={handlePreloadSamples}
                   hasCandidates={candidates.length > 0}
+                  onQueueProgressChange={(completed, total, isProc) => {
+                    setQueueCompleted(completed);
+                    setQueueTotal(total);
+                    setQueueProcessing(isProc);
+                  }}
                 />
               </div>
 
@@ -560,7 +745,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => setCurrentMainStep(1)}
-                  className="py-3 px-5 border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 font-sans text-xs font-bold rounded-2xl transition flex items-center gap-2 cursor-pointer"
+                  className="py-3 px-5 border border-slate-250 bg-white hover:bg-slate-55 text-slate-750 font-sans text-xs font-bold rounded-sm transition flex items-center gap-2 cursor-pointer"
                 >
                   <ArrowLeft className="w-4 h-4" />
                   <span>이전 단계 (심사 기준 수립)</span>
@@ -568,11 +753,25 @@ export default function App() {
                 {candidates.length > 0 && (
                   <button
                     type="button"
-                    onClick={() => setCurrentMainStep(3)}
-                    className="py-3 px-6 bg-indigo-600 hover:bg-indigo-700 text-white font-sans text-xs font-bold rounded-2xl transition-all shadow-sm flex items-center gap-2 cursor-pointer"
+                    onClick={() => !queueProcessing && setCurrentMainStep(3)}
+                    disabled={queueProcessing}
+                    className={`py-3 px-6 font-sans text-xs font-bold rounded-sm transition-all shadow-none flex items-center gap-2 cursor-pointer ${
+                      queueProcessing 
+                        ? "bg-slate-200 text-slate-500 cursor-not-allowed" 
+                        : "bg-slate-950 hover:bg-slate-900 text-white"
+                    }`}
                   >
-                    <span>3단계 AI 평정 대시보드 검토</span>
-                    <ArrowRight className="w-4 h-4" />
+                    {queueProcessing ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin text-slate-500" />
+                        <span>일괄 구직서류 AI 종합 평가 진행 중... ({queueCompleted} / {queueTotal} 완료)</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>3단계 AI 평정 대시보드 검토</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </>
+                    )}
                   </button>
                 )}
               </div>
@@ -608,7 +807,7 @@ export default function App() {
                   <div className="space-y-2">
                     <h4 className="text-base font-bold text-slate-800">등록된 구직자가 없습니다.</h4>
                     <p className="text-xs text-slate-400 font-sans leading-relaxed">
-                      실시간 가로 분석 대시보드를 생성하려면 이력서 적재 및 서류 분석이 우선되어야 합니다.<br />
+                      실시간 가로 분석 대시보드를 생성하려면 입사지원서 적재 및 서류 분석이 우선되어야 합니다.<br />
                       2단계에서 서류 양식을 직접 입력하거나, 샘플 자동 불러오기를 실행해 보세요.
                     </p>
                   </div>
@@ -626,7 +825,7 @@ export default function App() {
               ) : (
                 <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
                   {/* Left Table Panel */}
-                  <div className="xl:col-span-5">
+                  <div className={dashboardViewMode.includes("table") ? "xl:col-span-12 col-span-1" : "xl:col-span-5 col-span-1"}>
                     <CandidateDashboard 
                       candidates={displayedCandidates}
                       centerInfo={centerInfo}
@@ -638,11 +837,13 @@ export default function App() {
                       hasPresets={candidates.some(c => c.id.startsWith("cand_preset_"))}
                       hasRegistered={candidates.some(c => !c.id.startsWith("cand_preset_"))}
                       registeredCount={candidates.filter(c => !c.id.startsWith("cand_preset_")).length}
+                      viewMode={dashboardViewMode.includes("table") ? "table" : "card"}
+                      onViewModeChange={(val) => setDashboardViewMode(val)}
                     />
                   </div>
 
                   {/* Right Details Panel */}
-                  <div className="xl:col-span-7">
+                  <div className={dashboardViewMode.includes("table") ? "xl:col-span-12 col-span-1" : "xl:col-span-7 col-span-1"}>
                     {selectedCandidate ? (
                       <CandidateDetailsPanel 
                         candidate={selectedCandidate}
@@ -785,6 +986,36 @@ export default function App() {
           </div>
         </div>
       )}
+
+      <ApiKeyModal
+        isOpen={isApiKeyModalOpen}
+        onClose={() => setIsApiKeyModalOpen(false)}
+        onSave={() => {
+          setHasUserApiKey(true);
+          setIsApiKeyModalOpen(false);
+        }}
+        onClear={() => setHasUserApiKey(false)}
+      />
+
+      <AnimatePresence>
+        {shortcutFeedback && (
+          <motion.div
+            initial={{ opacity: 0, y: 30, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 350, damping: 25 }}
+            className="fixed bottom-6 right-6 z-50 max-w-sm bg-slate-950 text-white border border-slate-800 rounded shadow-xl p-3.5 flex items-start gap-3 font-sans select-none"
+          >
+            <div className="w-7 h-7 rounded bg-slate-800 text-slate-100 flex items-center justify-center font-bold text-xs shrink-0 ring-1 ring-slate-700 mt-0.5 shadow-sm">
+              ⚡
+            </div>
+            <div className="flex-1">
+              <p className="text-xs font-bold text-white leading-tight">고속 단축키 동작</p>
+              <p className="text-[11px] text-slate-350 mt-1 leading-normal font-sans font-medium">{shortcutFeedback}</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
