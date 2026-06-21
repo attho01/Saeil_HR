@@ -69,7 +69,12 @@ export default function App() {
   });
 
   const [isSetupComplete, setIsSetupComplete] = useState<boolean>(() => {
-    return localStorage.getItem("saerong_setup_complete_v3.1") === "true";
+    const saved = localStorage.getItem("saerong_setup_complete_v3.1");
+    if (saved) {
+      return saved === "true";
+    }
+    // Default to true for premium instant auto-start!
+    return true;
   });
 
   const [showWizardDirectly, setShowWizardDirectly] = useState<boolean>(false);
@@ -83,7 +88,8 @@ export default function App() {
         return [];
       }
     }
-    return [];
+    // Default to mock candidates on first visit so the system is fully functional right away
+    return MOCK_CANDIDATES;
   });
 
   const [filterRegisteredOnly, setFilterRegisteredOnly] = useState<boolean>(() => {
@@ -178,13 +184,16 @@ export default function App() {
         if (parsed && parsed.length > 0) {
           return 3;
         }
+      } else {
+        // First visit with pre-loaded mock candidates, go straight to the dashboard!
+        return 3; 
       }
       const setupDone = localStorage.getItem("saerong_setup_complete_v3.1") === "true";
       if (setupDone) {
         return 2;
       }
     } catch (_) {}
-    return 1;
+    return 3;
   });
 
   // Sync filter choice
@@ -457,40 +466,48 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans" id="recruiter-app-viewport">
-      {/* Upper Navigation Bar - Professional Polish Edition */}
-      <header className="bg-slate-950 text-white border-b border-slate-850 sticky top-0 z-40 px-6 py-4 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 shadow-md shrink-0">
-        <div className="space-y-1">
-          <h1 className="font-sans font-extrabold text-white text-xl leading-tight flex flex-wrap items-center gap-2">
-            <span className="bg-slate-800 px-2.5 py-0.5 rounded-sm text-[10px] font-extrabold font-mono tracking-wider">v3.1 최종</span>
-            <span>{centerInfo.centerName.startsWith(centerInfo.region) ? centerInfo.centerName : `${centerInfo.region} ${centerInfo.centerName}`} 채용 분석 시스템</span>
-          </h1>
-          <p className="text-xs text-slate-400 font-sans leading-relaxed">
-            채용 직무: <span className="text-slate-200 font-medium">{centerInfo.customProfile?.jobTitle || centerInfo.targetJobType}</span> | 
-            가중치 배율: <span className="text-slate-200 font-medium">직무 {centerInfo.customProfile?.ratioJobPerformance}% : 조직적합 {centerInfo.customProfile?.ratioCultureSync}%</span> | 
-            상태: <span className="text-emerald-400 font-medium inline-flex items-center gap-1">● 법정보호 마스킹 활성</span>
-            {hasUserApiKey ? (
-              <span className="text-cyan-400 font-medium ml-2 inline-flex items-center gap-1">| 🔑 개인 API 키 연결 상태</span>
-            ) : (
-              <span className="text-slate-400 font-medium ml-2 inline-flex items-center gap-1">| 🔑 기본 무료 분석 모드</span>
-            )}
-          </p>
+      {/* Upper Navigation Bar - HOSTLINEA Custom Themed Edition */}
+      <header className="bg-[#2f353d] text-white border-b border-white/10 sticky top-0 z-40 px-6 py-4 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 shadow-md shrink-0">
+        <div className="flex items-center gap-3">
+          {/* Trademark 2 green vertical bars */}
+          <div className="flex gap-1 shrink-0">
+            <div className="w-[6px] h-6 bg-[#8ac43f] rounded-xs" />
+            <div className="w-[6px] h-6 bg-[#8ac43f] rounded-xs" />
+          </div>
+          <div className="space-y-0.5">
+            <h1 className="font-sans font-extrabold text-white text-base leading-tight flex flex-wrap items-center gap-1.5">
+              <span className="text-white font-extrabold uppercase font-sans tracking-tight mr-1">HOSTLINEA</span>
+              <span className="bg-[#8ac43f] text-white px-2 py-0.5 rounded-sm text-[9px] font-extrabold tracking-wider">{centerInfo.region}</span>
+              <span className="text-slate-200">{centerInfo.centerName} 채용 평정 시스템</span>
+            </h1>
+            <p className="text-[11px] text-slate-300 font-sans leading-relaxed">
+              채용 직무: <span className="text-[#8ac43f] font-bold">{centerInfo.customProfile?.jobTitle || centerInfo.targetJobType}</span> | 
+              가중치 배율: <span className="text-white font-medium">직무 {centerInfo.customProfile?.ratioJobPerformance}% : 조직적합 {centerInfo.customProfile?.ratioCultureSync}%</span> | 
+              상태: <span className="text-[#8ac43f] font-bold inline-flex items-center gap-1">● 법정보호 마스킹 활성</span>
+              {hasUserApiKey ? (
+                <span className="text-emerald-400 font-bold ml-2 inline-flex items-center gap-1">| 🔑 API 키 작동 중</span>
+              ) : (
+                <span className="text-slate-300 font-bold ml-2 inline-flex items-center gap-1">| 🔑 기본 무료 모드</span>
+              )}
+            </p>
+          </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full lg:w-auto">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
           {/* Action buttons */}
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => setIsApiKeyModalOpen(true)}
-              className={`py-1.5 px-3.5 rounded-sm transition-all duration-150 flex items-center justify-center gap-1.5 font-sans text-xs font-bold cursor-pointer border ${
+              className={`py-1.5 px-3.5 rounded transition-all duration-150 flex items-center justify-center gap-1.5 font-sans text-xs font-bold cursor-pointer border ${
                 hasUserApiKey 
-                  ? "bg-emerald-950 hover:bg-emerald-900 text-emerald-300 border-emerald-800" 
-                  : "bg-slate-900 hover:bg-slate-800 text-indigo-300 border-slate-800"
+                  ? "bg-[#8ac43f]/20 hover:bg-[#8ac43f]/35 text-white border-[#8ac43f]" 
+                  : "bg-white/10 hover:bg-white/15 text-slate-200 border-white/20"
               }`}
               id="api-key-mgmt-btn"
             >
-              <Key className="w-3.5 h-3.5 text-amber-400" />
-              {hasUserApiKey ? "Gemini API 키 등록됨" : "Gemini API 키 등록"}
+              <Key className="w-3.5 h-3.5 text-[#8ac43f]" />
+              {hasUserApiKey ? "API 키 관리" : "API 키 등록"}
             </button>
             <button
               type="button"
@@ -498,7 +515,7 @@ export default function App() {
                 setIsSetupComplete(false);
                 setShowWizardDirectly(false);
               }}
-              className="py-1.5 px-3 bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 font-sans text-xs font-bold rounded-sm transition-all duration-150 flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
+              className="py-1.5 px-3 bg-white/5 hover:bg-white/10 text-slate-200 border border-white/10 font-sans text-xs font-bold rounded transition-all duration-150 flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
             >
               <HelpCircle className="w-3.5 h-3.5 text-slate-400" />
               시스템 소개(홈)
@@ -509,10 +526,10 @@ export default function App() {
                 setIsSetupComplete(false);
                 setShowWizardDirectly(true);
               }}
-              className="py-1.5 px-3.5 bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 font-sans text-xs font-bold rounded-sm transition-all duration-150 flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
+              className="py-1.5 px-3.5 bg-white/5 hover:bg-white/10 text-slate-200 border border-white/10 font-sans text-xs font-bold rounded transition-all duration-150 flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
               id="run-wizard-btn"
             >
-              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+              <Sparkles className="w-3.5 h-3.5 text-[#8ac43f]" />
               인사설정 마법사
             </button>
             {candidates.length > 0 && (
@@ -520,7 +537,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={handleExportTextReport}
-                  className="py-1.5 px-3.5 bg-white hover:bg-slate-100 text-slate-950 border border-slate-300 font-sans text-xs font-bold rounded-sm transition-all duration-150 flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
+                  className="py-1.5 px-3.5 bg-[#8ac43f] hover:bg-[#7cb337] text-white font-sans text-xs font-bold rounded transition-all duration-150 flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
                   id="export-text-btn"
                 >
                   <Download className="w-3.5 h-3.5" />
@@ -529,7 +546,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={handleClearCandidates}
-                  className="py-1.5 px-3.5 bg-slate-800 hover:bg-slate-750 text-slate-200 border border-slate-700 font-sans text-xs font-bold rounded-sm transition-all duration-150 flex items-center justify-center gap-1.5 cursor-pointer"
+                  className="py-1.5 px-3.5 bg-red-900/40 hover:bg-red-900/60 text-red-200 border border-red-800 font-sans text-xs font-bold rounded transition-all duration-150 flex items-center justify-center gap-1.5 cursor-pointer"
                   id="clear-all-btn"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
@@ -539,14 +556,14 @@ export default function App() {
             )}
           </div>
           
-          {/* Agent Badge from Professional Polish theme */}
-          <div className="flex items-center gap-3 border-t sm:border-t-0 border-slate-800 pt-3 sm:pt-0 pl-0 sm:pl-4 sm:border-l border-slate-800">
+          {/* Agent Badge Hostlinea styled */}
+          <div className="flex items-center gap-3 border-t sm:border-t-0 border-white/10 pt-3 sm:pt-0 pl-0 sm:pl-4 sm:border-l border-white/10">
             <div className="text-right hidden sm:block">
-              <p className="text-[10px] text-slate-500 uppercase tracking-wider font-mono font-bold">Evaluator Mode</p>
-              <p className="text-xs font-bold text-slate-300 italic">HR Specialist Agent</p>
+              <p className="text-[9px] text-[#8ac43f] uppercase tracking-wider font-mono font-bold">Evaluator Mode</p>
+              <p className="text-xs font-bold text-slate-200 italic">HR Specialist Agent</p>
             </div>
-            <div className="w-9 h-9 bg-slate-800 rounded-sm flex items-center justify-center border border-slate-750 font-extrabold text-sm text-white shadow-inner">
-              HR
+            <div className="w-9 h-9 bg-white/5 rounded-sm flex items-center justify-center border border-white/10 font-extrabold text-xs text-[#8ac43f] shadow-inner font-mono">
+              HOST
             </div>
           </div>
         </div>

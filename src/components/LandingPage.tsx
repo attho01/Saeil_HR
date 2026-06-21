@@ -12,7 +12,12 @@ import {
   HelpCircle,
   Gem,
   Award,
-  BadgeCheck
+  BadgeCheck,
+  Check,
+  Search,
+  Globe,
+  Settings,
+  HelpCircle as QuestionIcon
 } from "lucide-react";
 
 interface LandingPageProps {
@@ -31,47 +36,102 @@ export default function LandingPage({ onStartSetup, onQuickLoadSample, onOpenApi
   };
 
   return (
-    <div className="bg-white min-h-screen flex flex-col font-sans" id="landing-container">
-      {/* Upper Navigation Header - Styled like Burnout Battery with Menu */}
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-100 px-6 py-4 shadow-sm">
+    <div className="bg-[#2f353d] min-h-screen flex flex-col font-sans text-slate-200" id="landing-container">
+      {/* 1. Header Contact Line (Top Mini Bar) from the image */}
+      <div className="bg-[#1f2226] text-slate-400 text-[11px] py-2 px-6 border-b border-white/5 font-sans">
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+            <span>Customer Care : (888) 123-4567</span>
+            <span className="text-slate-600">|</span>
+            <button type="button" onClick={onOpenApiKeyModal} className="hover:text-white transition">Login</button>
+            <span className="text-slate-600">|</span>
+            <button type="button" onClick={onStartSetup} className="hover:text-white transition">Register</button>
+          </div>
+          <div className="flex gap-3 text-[10px] items-center">
+            <span className="hover:text-white cursor-pointer select-none">f</span>
+            <span className="text-slate-700">·</span>
+            <span className="hover:text-white cursor-pointer select-none">t</span>
+            <span className="text-slate-700">·</span>
+            <span className="hover:text-white cursor-pointer select-none">g+</span>
+            <span className="text-slate-700">·</span>
+            <span className="hover:text-white cursor-pointer select-none">ln</span>
+          </div>
+        </div>
+      </div>
+
+      {/* 2. Brand Upper Navigation Header - Styled 100% like HOSTLINEA */}
+      <header className="sticky top-0 z-40 bg-[#2f353d]/98 backdrop-blur-md border-b border-white/10 px-6 py-4 shadow-lg">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 bg-slate-950 rounded-sm flex items-center justify-center text-white shadow-sm">
-              <Building2 className="w-5 h-5 text-indigo-300" />
+          
+          {/* Logo with 2 green vertical stripes and White HOSTLINEA text */}
+          <div className="flex items-center gap-3">
+            <div className="flex gap-1 shrink-0">
+              <div className="w-[6px] h-6 bg-[#8ac43f] rounded-xs" />
+              <div className="w-[6px] h-6 bg-[#8ac43f] rounded-xs" />
             </div>
             <div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-[10px] bg-slate-100 text-slate-800 border border-slate-200 font-bold px-2 py-0.5 rounded tracking-tight">Saerong AI HR</span>
-                <span className="text-[9px] bg-indigo-650 text-white font-extrabold px-1.5 py-0.5 rounded tracking-tight">공정인사 지원</span>
+              <div className="flex items-center gap-2">
+                <span className="text-white font-extrabold text-xl tracking-tight font-sans">HOSTLINEA</span>
+                <span className="text-[9px] bg-[#8ac43f] text-white font-bold px-1.5 py-0.5 rounded tracking-widest uppercase">SAERONG</span>
               </div>
-              <h1 className="text-slate-900 font-bold text-xs tracking-tight leading-4 mt-0.5">새일센터 채용 자체 평정 종합 솔루션</h1>
+              <h1 className="text-slate-400 font-medium text-[10px] tracking-tight leading-3 mt-0.5">
+                새일센터 자체인사 채용 평정 시스템 (Blinded v3.1)
+              </h1>
             </div>
           </div>
 
-          {/* Screenshot-matched Navigation Links and Actions */}
+          {/* Screenshot Match Navigation Links */}
           <div className="flex items-center gap-6 sm:gap-8">
-            <nav className="hidden md:flex items-center gap-6 text-slate-600 font-sans text-xs font-bold">
+            <nav className="hidden lg:flex items-center gap-5 text-white/80 font-sans text-xs font-bold tracking-wider">
+              <button 
+                type="button" 
+                onClick={() => scrollToId("hero-section")} 
+                className="hover:text-[#8ac43f] text-[#8ac43f] transition uppercase"
+              >
+                HOME
+              </button>
               <button 
                 type="button" 
                 onClick={() => scrollToId("features-section")} 
-                className="hover:text-indigo-600 transition cursor-pointer"
+                className="hover:text-[#8ac43f] transition uppercase"
               >
-                왜 이 진단인가
+                LAYOUTS
+              </button>
+              <button 
+                type="button" 
+                onClick={() => scrollToId("domain-pricing-bar")} 
+                className="hover:text-[#8ac43f] transition uppercase"
+              >
+                DOMAINS
+              </button>
+              <button 
+                type="button" 
+                onClick={() => scrollToId("what-we-offer-section")} 
+                className="hover:text-[#8ac43f] transition uppercase"
+              >
+                HOSTING
               </button>
               <button 
                 type="button" 
                 onClick={() => scrollToId("workflow-section")} 
-                className="hover:text-indigo-600 transition cursor-pointer"
+                className="hover:text-[#8ac43f] transition uppercase"
               >
-                진단 절차
+                PAGES
+              </button>
+              <button 
+                type="button" 
+                onClick={() => scrollToId("testimonial-section")} 
+                className="hover:text-[#8ac43f] transition uppercase"
+              >
+                PORTFOLIO
               </button>
               <button 
                 type="button" 
                 onClick={onOpenApiKeyModal} 
-                className="hover:text-indigo-600 transition cursor-pointer flex items-center gap-1 text-slate-800"
+                className="hover:text-[#8ac43f] transition uppercase flex items-center gap-1 text-slate-300"
               >
-                <div className={`w-1.5 h-1.5 rounded-full ${hasUserApiKey ? 'bg-emerald-500' : 'bg-indigo-500 animate-pulse'}`}></div>
-                API 키 등록
+                <span className={`w-1.5 h-1.5 rounded-full ${hasUserApiKey ? 'bg-emerald-400 animate-pulse' : 'bg-[#8ac43f]'}`} />
+                API KEYS
               </button>
             </nav>
 
@@ -79,342 +139,425 @@ export default function LandingPage({ onStartSetup, onQuickLoadSample, onOpenApi
               <button
                 type="button"
                 onClick={onOpenApiKeyModal}
-                className={`py-1.5 px-3 rounded-full font-sans text-xs font-bold border transition cursor-pointer ${
+                className={`py-1.5 px-3 rounded-md font-sans text-[11px] font-bold border transition cursor-pointer ${
                   hasUserApiKey 
-                    ? "bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100" 
-                    : "bg-indigo-50 text-indigo-700 border-indigo-100 hover:bg-indigo-100"
+                    ? "bg-[#8ac43f]/20 text-white border-[#8ac43f] hover:bg-[#8ac43f]/30" 
+                    : "bg-white/10 text-slate-200 border-white/20 hover:bg-white/15"
                 }`}
               >
-                {hasUserApiKey ? "API 키 관리 ✓" : "API 키 등록"}
+                {hasUserApiKey ? "API 키 완료" : "API KEY"}
               </button>
               <button
                 type="button"
                 onClick={onStartSetup}
-                className="bg-slate-950 hover:bg-slate-900 border border-slate-950 text-white text-xs font-bold py-1.5 px-4 rounded transition-all cursor-pointer flex items-center gap-1 shadow-sm"
+                className="bg-[#8ac43f] hover:bg-[#7cb337] text-white text-[11px] font-bold py-1.5 px-3.5 rounded shadow-sm transition-all duration-150 cursor-pointer flex items-center gap-1"
+                id="header-setup-trigger"
               >
                 <span>시작하기</span>
-                <ArrowRight className="w-3.5 h-3.5" />
+                <ArrowRight className="w-3 h-3" />
               </button>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Hero Accent Banner section */}
-      <section className="bg-slate-950 text-white pt-24 pb-28 px-6 relative overflow-hidden" id="hero-section">
-        {/* Minimal Linear Grid Styling mimicking the slides architectural lines */}
-        <div className="absolute inset-0 opacity-5 bg-[linear-gradient(to_right,#ffffff_1px,transparent_1px),linear-gradient(to_bottom,#ffffff_1px,transparent_1px)] bg-[size:40px_40px]"></div>
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-white rounded-full blur-[160px] opacity-[0.06]"></div>
+      {/* 3. Hero Section - Unlimited Web Hosting Overlaid Style */}
+      <section className="relative text-white min-h-[520px] flex items-center px-6 py-20 overflow-hidden" id="hero-section" style={{
+        backgroundImage: `linear-gradient(rgba(47, 53, 61, 0.72), rgba(31, 34, 38, 0.88)), url('https://images.unsplash.com/photo-1531538606174-0f90ff5dce83?q=80&w=1200&auto=format&fit=crop')`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center'
+      }}>
+        <div className="max-w-6xl mx-auto w-full grid grid-cols-1 md:grid-cols-12 gap-8 items-center relative z-10">
+          
+          {/* Hero Left Content */}
+          <div className="md:col-span-8 space-y-6">
+            <span className="text-[#8ac43f] font-extrabold text-xs tracking-wider uppercase bg-[#8ac43f]/10 py-1.5 px-3 rounded-md border border-[#8ac43f]/30 w-fit block">
+              ★ Saerong AI HR - Web Hosting Standard
+            </span>
 
-        <div className="max-w-4xl mx-auto text-center relative z-10 space-y-8">
-          <motion.div 
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-slate-900 border border-slate-800 rounded text-xs font-medium text-slate-300"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-white animate-pulse" />
-            <span className="font-sans tracking-wide">새일센터 실무자가 전하는 똑똑하고 수월한 자체 인사</span>
-          </motion.div>
+            <div className="space-y-3">
+              <h1 className="text-4xl sm:text-5.5xl font-extrabold tracking-tight leading-tight uppercase font-sans">
+                UNLIMITED<br />
+                <span className="text-[#8ac43f]">WEB HOSTING</span>
+              </h1>
+              <h2 className="text-lg sm:text-2xl font-bold tracking-tight text-slate-100 max-w-2xl leading-snug">
+                어려운 입사지원서 심사, 1초 만에 공정한 AI 평정으로 완벽히 가동하세요!
+              </h2>
+            </div>
 
-          <div className="space-y-5">
-            <motion.h2 
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="text-4xl sm:text-6xl font-serif tracking-tight leading-[1.12] text-white font-medium"
-            >
-              어려운 입사지원서 심사,<br className="sm:hidden" />
-              <span className="block mt-2 italic text-slate-300 font-light">
-                1초 만에 공정한 AI 평정
-              </span>으로 해결하세요!
-            </motion.h2>
-            <motion.p 
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="text-slate-300 max-w-2.5xl mx-auto font-light leading-relaxed text-xs sm:text-sm font-sans"
-            >
-              보조금 정산, 기획력, 구직자 관리 등 <strong className="text-white font-semibold">새일센터 고유의 직무 역량</strong>을 정밀 분석하고,<br />
-              입사지원서 속 필수 마스킹 개인 정보를 자동 필터링하여 완벽하고 공정한 면접 질문지까지 원스톱으로 지원합니다.
-            </motion.p>
-          </div>
+            <p className="text-slate-300 max-w-2xl font-light leading-relaxed text-xs sm:text-sm font-sans">
+              보조금 정산, 기획력, 구직자 관리 등 <strong>여성새로일하기센터 고유의 실무 역량</strong>을 정밀 분석하고, 
+              입사지원서 속 주민번호 등 수집금지 개인정보를 <strong>실시간 마스킹 자동 필터링</strong>하여 완벽하게 정정당당한 면접 질문지까지 원스톱 출력합니다.
+            </p>
 
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.3 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-3.5 pt-6 text-xs"
-          >
-            {hasUserApiKey ? (
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-4 text-xs font-bold">
               <button
                 type="button"
                 onClick={onStartSetup}
-                className="w-full sm:w-auto py-3.5 px-8 bg-indigo-400 hover:bg-indigo-500 text-white font-bold rounded-full shadow transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+                className="bg-[#8ac43f] hover:bg-[#7cb337] uppercase text-white font-extrabold py-3.5 px-8 rounded transition duration-150 shadow-lg flex items-center justify-center gap-2 cursor-pointer"
               >
-                <span>🔑 API 키 등록 완료! (채용 설계 시작)</span>
-                <ArrowRight className="w-4 h-4 text-white/90" />
+                <span>Get Started now</span>
+                <ArrowRight className="w-4 h-4" />
               </button>
-            ) : (
+
               <button
                 type="button"
-                onClick={onOpenApiKeyModal}
-                className="w-full sm:w-auto py-3.5 px-8 bg-indigo-500 hover:bg-indigo-600 text-white font-bold rounded-full shadow transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+                onClick={onQuickLoadSample}
+                className="bg-white/10 hover:bg-white/25 border border-white/20 text-white font-extrabold uppercase py-3.5 px-6 rounded transition flex items-center justify-center gap-1.5 cursor-pointer"
               >
-                <span>🔑 API 키 등록하고 시작하기</span>
-                <ArrowRight className="w-4 h-4 text-white/90" />
+                <Play className="w-3.5 h-3.5 fill-white" />
+                <span>무료 데모/샘플 구경</span>
               </button>
-            )}
+            </div>
+          </div>
 
-            <button
+          {/* Hero Right Floating Circle Badges from the screenshot! */}
+          <div className="md:col-span-4 flex flex-row md:flex-col justify-center items-center gap-6 pt-6 md:pt-0">
+            {/* White up to 50% circle */}
+            <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full bg-white text-slate-900 flex flex-col items-center justify-center text-center shadow-2xl p-2 border-4 border-[#8ac43f]">
+              <span className="text-[10px] uppercase font-bold tracking-wider text-slate-500">Up to</span>
+              <span className="text-2xl sm:text-3.5xl font-extrabold text-slate-900 leading-none">50%</span>
+              <span className="text-[10px] uppercase font-extrabold text-[#8ac43f] tracking-wide mt-1">/Offer</span>
+            </div>
+
+            {/* Lime green starting at $4.99 /mo circle */}
+            <div className="w-32 h-32 sm:w-36 sm:h-36 rounded-full bg-[#8ac43f] text-white flex flex-col items-center justify-center text-center shadow-2xl p-2 border-4 border-white/20">
+              <span className="text-[10px] uppercase font-bold tracking-widest text-white/80">Starting at</span>
+              <span className="text-3xl sm:text-4xl font-black text-white font-mono leading-none my-0.5">$4.99</span>
+              <span className="text-[10px] font-bold text-white/90">/mo</span>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      {/* 4. Domain check bar (Vivid Lime green strip) */}
+      <div className="bg-[#8ac43f] py-4 px-6 text-white" id="domain-pricing-bar">
+        <div className="max-w-6xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-4 font-sans">
+          
+          {/* Left domain price tags */}
+          <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-8 font-extrabold text-xs tracking-wider shrink-0">
+            <div className="flex items-center gap-1.5">
+              <span className="text-white/80 font-normal">.com</span>
+              <span className="text-white text-base">$11.99</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-white/80 font-normal">.org</span>
+              <span className="text-white text-base">$9.99</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-white/80 font-normal">.net</span>
+              <span className="text-white text-base">$7.99</span>
+            </div>
+          </div>
+
+          {/* Right actual domain/candidate mockup search bar */}
+          <div className="flex items-stretch w-full lg:max-w-xl bg-white rounded-md overflow-hidden p-1 shadow-md">
+            <input 
+              type="text" 
+              placeholder="Enter your Domain Name here..." 
+              defaultValue="saerong-center-hr.com"
+              className="flex-1 px-3.5 py-1.5 text-slate-800 focus:outline-none text-xs font-semibold"
+              onClick={(e) => (e.target as HTMLInputElement).select()}
+              readOnly
+            />
+            <div className="bg-slate-100/85 text-slate-600 px-3 flex items-center border-l border-slate-200 text-xs font-extrabold select-none shrink-0">
+              .com ▾
+            </div>
+            <button 
               type="button"
               onClick={onQuickLoadSample}
-              className="w-full sm:w-auto py-3.5 px-8 bg-slate-900 hover:bg-slate-800 text-slate-200 hover:text-white font-bold rounded-full border border-slate-800 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+              className="bg-slate-900 hover:bg-slate-800 text-white font-extrabold uppercase px-5 py-2 text-xs cursor-pointer select-none shrink-0"
             >
-              <Play className="w-3.5 h-3.5 text-indigo-300 fill-indigo-350" />
-              <span>무료 데모/샘플 구경하기</span>
+              Search
             </button>
+          </div>
 
-            <button
-              type="button"
-              onClick={() => scrollToId("features-section")}
-              className="w-full sm:w-auto py-3.5 px-6 text-slate-400 hover:text-white font-bold transition hover:underline flex items-center justify-center gap-1 cursor-pointer"
-            >
-              <span>어떻게 다른가요?</span>
-            </button>
-          </motion.div>
-
-          {/* Trust badges */}
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 0.85 }}
-            transition={{ delay: 0.4 }}
-            className="pt-10 grid grid-cols-3 gap-2 sm:gap-6 max-w-2xl mx-auto text-center border-t border-slate-900 text-slate-400 text-[11px]"
-          >
-            <div className="flex flex-col items-center gap-1">
-              <span className="text-white font-bold text-sm sm:text-base font-serif">Perfect</span>
-              <span className="text-slate-400 text-[10px]">채용절차법 블라인드 준수</span>
-            </div>
-            <div className="flex flex-col items-center gap-1 border-x border-slate-900">
-              <span className="text-white font-bold text-sm sm:text-base font-serif">Yes</span>
-              <span className="text-slate-400 text-[10px]">상담·행정·관리 맞춤 지표</span>
-            </div>
-            <div className="flex flex-col items-center gap-1">
-              <span className="text-white font-bold text-sm sm:text-base font-serif">100%</span>
-              <span className="text-slate-400 text-[10px]">실시간 연동형 면접 질문지</span>
-            </div>
-          </motion.div>
         </div>
-      </section>
+      </div>
 
-      {/* 4 Core Features / Strengths Panel */}
-      <section className="py-24 px-6 max-w-6xl mx-auto w-full space-y-20 bg-white" id="features-section">
-        <div className="text-center space-y-4 max-w-xl mx-auto">
-          <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block">Key Pillars</span>
-          <h3 className="text-3xl font-serif font-medium text-slate-950 tracking-tight leading-snug">
-            새일센터 인사담당자가 안심하고 사용할 수 있는 4대 장점
-          </h3>
-          <div className="w-12 h-[1px] bg-slate-350 mx-auto my-3" />
-          <p className="text-xs text-slate-500 font-sans leading-relaxed">
-            복잡하고 어려운 법률 기준과 지원서 더미 속에서 꼭 필요한 핵심 정보만 명쾌하게 정제하여 드립니다.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
-          {/* Strength 1 */}
-          <div className="bg-white p-8 rounded border border-slate-200 hover:border-slate-400 transition-all space-y-5 flex flex-col justify-between">
-            <div className="space-y-4">
-              <div className="w-10 h-10 bg-slate-100 rounded flex items-center justify-center text-slate-950 border border-slate-200">
-                <ShieldCheck className="w-5 h-5" />
-              </div>
-              <div className="space-y-2">
-                <h4 className="font-bold text-slate-950 text-base flex items-center gap-2">
-                  <span className="font-sans">법정 비수집 규제정보 자동 필터링</span>
-                  <span className="text-[9px] bg-slate-950 text-white font-extrabold px-1.5 py-0.5 rounded">블라인드 준수</span>
-                </h4>
-                <p className="text-xs text-slate-500 font-sans leading-relaxed">
-                  지원서(입사지원서 및 자소서)에 실수로 기재되기 쉬운 연령, 성별, 혼인유무, 가족 관계 등 법적으로 채점이 금지된 요소를 AI가 사전에 탐색하여 완벽 마스킹 처리하고 신뢰를 확보합니다.
-                </p>
-              </div>
-            </div>
-            <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-400 font-sans">
-              <span>채용절차법 제4조의3 완벽 반영</span>
-              <span className="text-slate-950 font-bold">감사 로그 제공</span>
-            </div>
-          </div>
-
-          {/* Strength 2 */}
-          <div className="bg-white p-8 rounded border border-slate-200 hover:border-slate-400 transition-all space-y-5 flex flex-col justify-between">
-            <div className="space-y-4">
-              <div className="w-10 h-10 bg-slate-100 rounded flex items-center justify-center text-slate-950 border border-slate-200">
-                <Building2 className="w-5 h-5" />
-              </div>
-              <div className="space-y-2">
-                <h4 className="font-bold text-slate-950 text-base flex items-center gap-2">
-                  <span className="font-sans">새일센터 실제 직무 연계형 세부 지표</span>
-                  <span className="text-[9px] bg-slate-950 text-white font-extrabold px-1.5 py-0.5 rounded">현업 맞춤화</span>
-                </h4>
-                <p className="text-xs text-slate-500 font-sans leading-relaxed">
-                  일반 대기업용 평가 서류가 아닙니다. 여성새로일하기센터의 주 업무인 국비 직업훈련 기획, 구인 구직 알선 및 성향 분석, 기업 네트워킹 및 행정 사후 관리에 적합한 맞춤 역량을 정확히 확인합니다.
-                </p>
-              </div>
-            </div>
-            <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-400 font-sans">
-              <span>상담직 / 행정직 / 총괄관리직 지원</span>
-              <span className="text-slate-950 font-bold">원스톱 지표화</span>
-            </div>
-          </div>
-
-          {/* Strength 3 */}
-          <div className="bg-white p-8 rounded border border-slate-200 hover:border-slate-400 transition-all space-y-5 flex flex-col justify-between">
-            <div className="space-y-4">
-              <div className="w-10 h-10 bg-slate-100 rounded flex items-center justify-center text-slate-950 border border-slate-200">
-                <UserCheck className="w-5 h-5" />
-              </div>
-              <div className="space-y-2">
-                <h4 className="font-bold text-slate-950 text-base flex items-center gap-2">
-                  <span className="font-sans">도덕성·성실함 중심 인성 키워드 매칭</span>
-                  <span className="text-[9px] bg-slate-950 text-white font-extrabold px-1.5 py-0.5 rounded">진성 태도 검증</span>
-                </h4>
-                <p className="text-xs text-slate-500 font-sans leading-relaxed">
-                  단순 기교적 능력을 넘어 새일센터 핵심 가치에 직결되는 도전정신, 성실함, 책임감, 배려심, 긍정적 사고, 리더십 등 엄선된 15개 핵심 인성 예시를 매칭해 인격적 적합성을 다층적으로 추출해 냅니다.
-                </p>
-              </div>
-            </div>
-            <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-400 font-sans">
-              <span>주관성 및 직무 무관 인성 제거</span>
-              <span className="text-slate-950 font-bold">15개 인성풀 탑재</span>
-            </div>
-          </div>
-
-          {/* Strength 4 */}
-          <div className="bg-white p-8 rounded border border-slate-200 hover:border-slate-400 transition-all space-y-5 flex flex-col justify-between">
-            <div className="space-y-4">
-              <div className="w-10 h-10 bg-slate-100 rounded flex items-center justify-center text-slate-950 border border-slate-200">
-                <Sparkles className="w-5 h-5" />
-              </div>
-              <div className="space-y-2">
-                <h4 className="font-bold text-slate-950 text-base flex items-center gap-2">
-                  <span className="font-sans">즉시 활용 가능한 AI 면접 유도 질문지</span>
-                  <span className="text-[9px] bg-slate-950 text-white font-extrabold px-1.5 py-0.5 rounded">면접관 리드서</span>
-                </h4>
-                <p className="text-xs text-slate-500 font-sans leading-relaxed">
-                  평정 후 면접 위원들이 곧장 사용할 수 있도록 실질적인 증빙 보조 서류 제안 및 직무 실무 역량 체크포인트, 감정노동 회복탄력성 검증 코너 등 실질적인 질문지를 체계적으로 생성해 줍니다.
-                </p>
-              </div>
-            </div>
-            <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-400 font-sans">
-              <span>서류 점검용 질문 6~9개 상시 도출</span>
-              <span className="text-slate-950 font-bold">리포트 다운로드 가능</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Visual Workflow Steps (3 Easy steps) */}
-      <section className="bg-slate-50 border-y border-slate-200 py-24 px-6" id="workflow-section">
-        <div className="max-w-5xl mx-auto space-y-16">
+      {/* 5. WHAT WE OFFER Section - Matched exactly with 3 beautiful boxes */}
+      <section className="bg-[#2a2f36] py-20 px-6" id="what-we-offer-section">
+        <div className="max-w-6xl mx-auto space-y-12">
+          
+          {/* Section title match */}
           <div className="text-center space-y-3">
-            <span className="text-[10px] text-slate-400 font-bold tracking-wider uppercase block">How It Works</span>
-            <h3 className="text-3xl font-serif text-slate-950 tracking-tight font-medium">
-              클릭 세 번으로 끝나는 무결점 채점 단계
-            </h3>
-            <p className="text-xs text-slate-500 max-w-xl mx-auto font-sans leading-relaxed">
-              복잡하고 복잡한 서류 평가는 가라! 새일센터 최적 구조 설계에 입각해 실무자분들의 고민을 순식간에 해소해 드립니다.
+            <h2 className="text-3xl font-extrabold uppercase text-white tracking-widest font-sans">
+              WHAT <span className="underline decoration-[#8ac43f] decoration-3 underline-offset-8">WE</span> OFFER
+            </h2>
+            <p className="text-xs text-slate-400 max-w-xl mx-auto font-sans font-light leading-relaxed">
+              여성새로일하기센터의 주 업무인 보조금 정산, 기업 구인처 발굴 및 상담 가이드를 법적 마스킹 장치를 활용하여 1초 만에 최상으로 대우하는 원스톱 솔루션
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center relative">
-            {/* Step 1 */}
-            <div className="bg-white p-8 rounded border border-slate-200 shadow-sm relative flex flex-col items-center">
-              <div className="absolute -top-2.5 w-7 h-7 rounded-sm bg-slate-950 text-white font-bold text-xs flex items-center justify-center font-mono">1</div>
-              <div className="w-10 h-10 bg-slate-50 rounded-sm flex items-center justify-center text-slate-800 border border-slate-100 mt-2 mb-4">
-                <Building2 className="w-5 h-5 text-slate-950" />
+          {/* 3 Large Boxes matching: Reseller, VPS, Dedicated style */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
+            
+            {/* Box 1: Reseller theme matching Strength 1 */}
+            <div className="bg-[#1f2226] border border-white/5 rounded-md p-8 text-center space-y-6 hover:border-[#8ac43f]/50 transition-all duration-350 flex flex-col justify-between">
+              <div className="space-y-4">
+                <span className="text-[#8ac43f] text-xs font-mono font-bold tracking-widest block uppercase border-b border-white/5 pb-2">RECOMMENDED PILLAR</span>
+                <h3 className="text-lg font-black text-white font-sans uppercase">RESELLER HOSTING</h3>
+                
+                <div className="py-2">
+                  <div className="text-[11px] text-slate-400">Start at</div>
+                  <div className="text-3xl font-mono font-black text-[#8ac43f]">$19.99 <span className="text-xs font-normal text-slate-400">/month</span></div>
+                </div>
+
+                <div className="h-[1px] bg-white/5 w-12 mx-auto" />
+
+                <div className="space-y-2 text-left">
+                  <h4 className="font-bold text-white text-xs text-center">법정 비수집 규제정보 자동 필터링 (블라인드)</h4>
+                  <p className="text-[11px] text-slate-400 leading-relaxed text-center font-sans">
+                    지원서(입사지원서 및 자소서)에 실수로 기재되기 쉬운 연령, 성별, 혼인유무 등 금지 요소를 자동 탐색하여 완벽 마스킹 처리하여 신뢰를 확보합니디.
+                  </p>
+                </div>
               </div>
-              <h4 className="font-bold text-slate-950 text-sm mb-1 font-sans">우리 센터 기준 설정</h4>
-              <p className="text-xs text-slate-500 font-sans leading-relaxed">
-                상담직/행정직 형태를 고르고, 센터 지점 및 구인 직무에 어울리는 인적성 지표와 직무 비율 가중치 비율을 세웁니다.
+
+              <div className="pt-4">
+                <button
+                  type="button"
+                  onClick={onStartSetup}
+                  className="w-full py-2.5 bg-[#8ac43f] hover:bg-[#7cb337] text-white text-xs font-bold uppercase rounded transition-all cursor-pointer"
+                >
+                  View all Plans
+                </button>
+              </div>
+            </div>
+
+            {/* Box 2: VPS theme matching Strength 2 */}
+            <div className="bg-[#1f2226] border border-[#8ac43f]/30 rounded-md p-8 text-center space-y-6 shadow-xl relative scale-100 flex flex-col justify-between">
+              {/* Sale green flag banner */}
+              <div className="absolute top-2 right-2 bg-[#8ac43f] text-white font-extrabold text-[8px] uppercase tracking-wider py-1 px-2.5 rounded-sm">
+                Sale
+              </div>
+
+              <div className="space-y-4">
+                <span className="text-[#8ac43f] text-xs font-mono font-bold tracking-widest block uppercase border-b border-white/5 pb-2">ADVANCED ENGINE</span>
+                <h3 className="text-lg font-black text-white font-sans uppercase">VPS HOSTING</h3>
+                
+                <div className="py-2">
+                  <div className="text-[11px] text-slate-400">Start at</div>
+                  <div className="text-3xl font-mono font-black text-[#8ac43f]">$20.99 <span className="text-xs font-normal text-slate-400">/month</span></div>
+                </div>
+
+                <div className="h-[1px] bg-white/5 w-12 mx-auto" />
+
+                <div className="space-y-2 text-left">
+                  <h4 className="font-bold text-white text-xs text-center">새일센터 현직 직무 연계형 세부 평정 지표</h4>
+                  <p className="text-[11px] text-slate-400 leading-relaxed text-center font-sans">
+                    일반 대기업용 지표가 아닙니다. 국비 직업훈련 기획, 구인알선, 기업 네트워킹 및 행정 사후관리에 특화된 고유 소양을 명쾌하게 채점하여 드립니다.
+                  </p>
+                </div>
+              </div>
+
+              <div className="pt-4">
+                <button
+                  type="button"
+                  onClick={onStartSetup}
+                  className="w-full py-2.5 bg-[#8ac43f] hover:bg-[#7cb337] text-white text-xs font-bold uppercase rounded transition-all cursor-pointer"
+                >
+                  View all Plans
+                </button>
+              </div>
+            </div>
+
+            {/* Box 3: Dedicated theme matching Strength 3 */}
+            <div className="bg-[#1f2226] border border-white/5 rounded-md p-8 text-center space-y-6 hover:border-[#8ac43f]/50 transition-all duration-350 flex flex-col justify-between">
+              <div className="space-y-4">
+                <span className="text-[#8ac43f] text-xs font-mono font-bold tracking-widest block uppercase border-b border-white/5 pb-2">SECURE METRIC</span>
+                <h3 className="text-lg font-black text-white font-sans uppercase">DEDICATED SERVERS</h3>
+                
+                <div className="py-2">
+                  <div className="text-[11px] text-slate-400">Start at</div>
+                  <div className="text-3xl font-mono font-black text-[#8ac43f]">$19.99 <span className="text-xs font-normal text-slate-400">/month</span></div>
+                </div>
+
+                <div className="h-[1px] bg-white/5 w-12 mx-auto" />
+
+                <div className="space-y-2 text-left">
+                  <h4 className="font-bold text-white text-xs text-center">도덕성·성실함 중심 인성 키워드 정밀 검증</h4>
+                  <p className="text-[11px] text-slate-400 leading-relaxed text-center font-sans">
+                    단순 기교를 넘어 새일센터 핵심가치인 성실함, 책임감, 배려심, 긍정적 사고를 엄선 매칭해 인격적 적격성을 분석 및 검출해 냅니다.
+                  </p>
+                </div>
+              </div>
+
+              <div className="pt-4">
+                <button
+                  type="button"
+                  onClick={onStartSetup}
+                  className="w-full py-2.5 bg-[#8ac43f] hover:bg-[#7cb337] text-white text-xs font-bold uppercase rounded transition-all cursor-pointer"
+                >
+                  View all Plans
+                </button>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </section>
+
+      {/* 6. WHAT'S HOT Section - 50/50 Grid matching the screenshot with actual image */}
+      <section className="bg-[#1e2227] grid grid-cols-1 md:grid-cols-2 overflow-hidden border-t border-white/5">
+        
+        {/* Left half: Modern office paper discussion photo from Unsplash */}
+        <div className="min-h-[380px] w-full" style={{
+          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.45)), url('https://images.unsplash.com/photo-1542744095-291853412781?q=80&w=800&auto=format&fit=crop')`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center'
+        }} referrerPolicy="no-referrer" />
+
+        {/* Right half: Detailed dark container holding stats and ticks */}
+        <div className="p-8 sm:p-14 flex flex-col justify-center space-y-6 font-sans">
+          <div className="space-y-1.5">
+            <span className="text-[#8ac43f] font-extrabold text-[10px] uppercase tracking-widest block">Core Strengths</span>
+            <h3 className="text-2xl sm:text-3xl font-extrabold text-white uppercase font-sans tracking-tight">WHAT'S HOT</h3>
+            <div className="w-10 h-[1.5px] bg-[#8ac43f]" />
+          </div>
+
+          <p className="text-xs text-slate-300 leading-relaxed font-light">
+            새로 채택된 '인성 소양 다차원 검증 기술'을 바탕으로, 자기소개서에 직접적으로 나타나지 않은 소양까지 추론하고 그에 필요한 면접 구술 스크립트 5문항을 완벽히 준비합니다.
+          </p>
+
+          {/* List layout from the screenshot with check marks */}
+          <div className="grid grid-cols-1 gap-3.5 pt-2">
+            
+            <div className="flex bg-[#1f2226]/50 p-3.5 rounded-lg border border-white/5 items-start gap-4">
+              {/* Circular yellow/green 100% Free badge style inside */}
+              <div className="w-14 h-14 rounded-full bg-[#8ac43f] text-white flex flex-col items-center justify-center text-center shrink-0 border border-white/25 shadow-md">
+                <span className="text-[8px] uppercase font-black tracking-wider leading-none">100%</span>
+                <span className="text-[10px] font-black leading-none mt-0.5">Free</span>
+              </div>
+              
+              <div className="space-y-1">
+                <h4 className="text-white font-extrabold text-sm font-sans uppercase">GET 25% OFF ON HOSTING</h4>
+                <div className="space-y-1 text-slate-300 text-xs">
+                  <div className="flex items-center gap-1.5 leading-normal">
+                    <Check className="w-3.5 h-3.5 text-[#8ac43f] shrink-0" />
+                    <span>전국 여성새로일하기센터 100% 한글 서류 및 즉각 분석 호환</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 leading-normal">
+                    <Check className="w-3.5 h-3.5 text-[#8ac43f] shrink-0" />
+                    <span>개인정보보호법에 위배되는 불필요한 나이·소득정보 전면 블라인드 처리</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <div className="pt-4 flex items-center justify-start">
+            <button
+              type="button"
+              onClick={onStartSetup}
+              className="px-6 py-2.5 border border-white/30 hover:border-white/90 text-white bg-transparent hover:bg-white/5 text-xs font-bold uppercase rounded transition-all cursor-pointer"
+            >
+              sign up now !
+            </button>
+          </div>
+        </div>
+
+      </section>
+
+      {/* 7. Detailed Workflow Section - 3 Steps with Hostlinea Theme */}
+      <section className="bg-[#292e35] py-20 px-6 border-y border-white/5" id="workflow-section">
+        <div className="max-w-6xl mx-auto space-y-12">
+          
+          <div className="text-center space-y-3">
+            <span className="text-[10px] text-[#8ac43f] font-extrabold tracking-widest uppercase block">How It Works</span>
+            <h3 className="text-2xl sm:text-3.5xl font-extrabold text-white tracking-tight uppercase font-sans">
+              EASY THREE-STEP DEPLOYMENT
+            </h3>
+            <p className="text-xs text-slate-400 max-w-xl mx-auto font-sans leading-relaxed font-light">
+              복잡하고 번거로운 서류 심사는 이제 끝! 자체 행정력 지표 설정부터 종합 분석 평정표 도출까지 완벽하게 이어집니다.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            {/* Step 1 */}
+            <div className="bg-[#1f2226] p-8 rounded-lg border border-white/5 relative flex flex-col items-center text-center space-y-4">
+              <div className="absolute -top-3 w-7 h-7 rounded bg-[#8ac43f] text-white font-extrabold text-xs flex items-center justify-center font-mono border-2 border-white/10">1</div>
+              <div className="w-10 h-10 bg-white/5 rounded-sm flex items-center justify-center text-[#8ac43f] border border-white/10 mt-2 mb-1">
+                <Building2 className="w-5 h-5" />
+              </div>
+              <h4 className="font-extrabold text-white text-xs uppercase font-sans">우리 센터 기준 설정</h4>
+              <p className="text-[11px] text-slate-400 leading-relaxed font-sans">
+                상담직/행정직 형태를 선택하고, 센터 위치에 어울리는 인성 지표와 직무 비율 가중치 스펙을 세웁니다.
               </p>
             </div>
 
             {/* Step 2 */}
-            <div className="bg-white p-8 rounded border border-slate-200 shadow-sm relative flex flex-col items-center">
-              <div className="absolute -top-2.5 w-7 h-7 rounded-sm bg-slate-950 text-white font-bold text-xs flex items-center justify-center font-mono">2</div>
-              <div className="w-10 h-10 bg-slate-50 rounded-sm flex items-center justify-center text-slate-800 border border-slate-100 mt-2 mb-4">
-                <FileText className="w-5 h-5 text-slate-950" />
+            <div className="bg-[#1f2226] p-8 rounded-lg border border-[#8ac43f]/20 relative flex flex-col items-center text-center space-y-4 shadow-xl">
+              <div className="absolute -top-3 w-7 h-7 rounded bg-[#8ac43f] text-white font-extrabold text-xs flex items-center justify-center font-mono border-2 border-white/10">2</div>
+              <div className="w-10 h-10 bg-white/5 rounded-sm flex items-center justify-center text-[#8ac43f] border border-white/10 mt-2 mb-1">
+                <FileText className="w-5 h-5" />
               </div>
-              <h4 className="font-sans font-bold text-slate-950 text-sm mb-1">구직 서류 복사해 넣기</h4>
-              <p className="text-xs text-slate-500 font-sans leading-relaxed">
-                해당 지원자들의 이력사항과 자기소개서 한글 텍스트를 고스란히 긁어 복사 및 입력해 넣은 뒤 즉시 연계 분석을 가동합니다.
+              <h4 className="font-extrabold text-white text-xs uppercase font-sans">구직 서류 복사해 넣기</h4>
+              <p className="text-[11px] text-slate-400 leading-relaxed font-sans">
+                대상 지원자들의 이력사항과 자기소개서 한글 텍스트를 고스란히 긁어 복사해 넣는 순간 즉각 분석이 개시됩니다.
               </p>
             </div>
 
             {/* Step 3 */}
-            <div className="bg-white p-8 rounded border border-slate-200 shadow-sm relative flex flex-col items-center">
-              <div className="absolute -top-2.5 w-7 h-7 rounded-sm bg-slate-950 text-white font-bold text-xs flex items-center justify-center font-mono">3</div>
-              <div className="w-10 h-10 bg-slate-50 rounded-sm flex items-center justify-center text-slate-800 border border-slate-100 mt-2 mb-4">
-                <Sparkles className="w-5 h-5 text-slate-950" />
+            <div className="bg-[#1f2226] p-8 rounded-lg border border-white/5 relative flex flex-col items-center text-center space-y-4">
+              <div className="absolute -top-3 w-7 h-7 rounded bg-[#8ac43f] text-white font-extrabold text-xs flex items-center justify-center font-mono border-2 border-white/10">3</div>
+              <div className="w-10 h-10 bg-white/5 rounded-sm flex items-center justify-center text-[#8ac43f] border border-white/10 mt-2 mb-1">
+                <Sparkles className="w-5 h-5" />
               </div>
-              <h4 className="font-sans font-bold text-slate-950 text-sm mb-1">AI 평정 대시보드 리드</h4>
-              <p className="text-xs text-slate-500 font-sans leading-relaxed">
-                분석 적재 결과 기반 실시간 인격적 티어와 서열 종합 평정표를 한눈에 보면서, 면접 추천 핵심 맞춤 질문지를 출력합니다.
+              <h4 className="font-extrabold text-white text-xs uppercase font-sans">AI 평정 대시보드 마감</h4>
+              <p className="text-[11px] text-slate-400 leading-relaxed font-sans">
+                분석 적재 가동에 따라 자동 도량화된 심사와 5대 심층 질문 리스트를 확인하며 최고의 구직인력을 선발합니다.
               </p>
             </div>
+
+          </div>
+
+        </div>
+      </section>
+
+      {/* 8. Quote testimonial zone */}
+      <section className="bg-[#1f2226] py-16 px-6 text-center" id="testimonial-section">
+        <div className="max-w-4xl mx-auto space-y-6">
+          <div className="inline-flex items-center justify-center w-10 h-10 bg-[#8ac43f]/10 text-[#8ac43f] rounded border border-[#8ac43f]/20">
+            <QuestionIcon className="w-5 h-5" />
+          </div>
+          <p className="text-sm sm:text-base text-slate-350 italic font-mono leading-relaxed max-w-3xl mx-auto font-light">
+            "매년 수십 세트씩 밀려드는 자체 새일센터 대체 인력 채용 때마다, 공정한 심사 규제와 자기소개서 요약에 시간 소모가 너무 컸습니다. 이 툴을 쓰고 나서 개인정보 위법 위배 요인도 완벽히 잡혔고, 면접관들과 질문 고민 시간도 예전의 1/5 수준으로 줄어 대단히 만족스럽습니다."
+          </p>
+          <div className="flex items-center justify-center gap-2 pt-2 text-[11px] text-slate-400 font-sans">
+            <BadgeCheck className="w-4 h-4 text-[#8ac43f]" />
+            <span className="font-bold text-slate-200">수도권 여성새로일하기센터 5년차 선임 직업상담원 강민아</span>
           </div>
         </div>
       </section>
 
-      {/* Testimonial Quote Zone */}
-      <section className="py-24 px-6 max-w-4xl mx-auto w-full text-center space-y-8 bg-white" id="testimonial-section">
-        <div className="inline-flex items-center justify-center w-12 h-12 bg-slate-50 text-slate-950 rounded border border-slate-200">
-          <HelpCircle className="w-5 h-5" />
-        </div>
-        <p className="text-base sm:text-lg text-slate-800 italic font-serif leading-relaxed font-light">
-          "매년 수십 세트씩 밀려드는 자체 새일센터 대체 인력 채용 때마다, 공정한 심사 규제와 자기소개서 요약에 시간 소모가 너무 컸습니다. 이 툴을 쓰고 나서 개인정보 위법 위배 요인도 완벽히 잡혔고, 면접관들과 질문 고민 시간도 예전의 1/5 수준으로 줄어 대단히 만족스럽습니다."
-        </p>
-        <div className="flex items-center justify-center gap-2">
-          <BadgeCheck className="w-4 h-4 text-slate-950" />
-          <span className="text-xs font-bold text-slate-950 font-sans">수도권 여성새로일하기센터 5년차 선임 직업상담원 강민아</span>
-        </div>
-      </section>
-
-      {/* Funnel Call To Action bottom */}
-      <section className="bg-slate-950 text-white py-20 px-6 text-center relative overflow-hidden" id="bottom-cta-section">
-        <div className="absolute inset-0 opacity-5 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:20px_20px]"></div>
-        <div className="max-w-2xl mx-auto space-y-8 relative z-10">
-          <h4 className="text-2xl sm:text-3.5xl font-serif tracking-tight leading-snug text-white font-medium">
-            구인난으로 바쁜 새일센터 실무 현장,<br />
-            지금 편리하고 똑똑하게 가동해 보세요!
+      {/* 9. Bottom Funnel CTA */}
+      <section className="bg-[#2f353d] text-white py-14 px-6 text-center border-t border-white/5">
+        <div className="max-w-2xl mx-auto space-y-4">
+          <h4 className="text-xl sm:text-2.5xl font-extrabold uppercase font-sans tracking-tight text-white">
+            READY TO JOIN SAERONG HOSTLINEA?
           </h4>
           <p className="text-xs text-slate-400 font-sans leading-relaxed font-light">
-            설치 없이 브라우저에서 바로 안전하게 구동됩니다. 모든 데이터는 인터넷 상에 불법 수집되지 않고 브라우저에 임시 정량 보관되어 보안상 극히 안전합니다.
+            모든 평가 및 연산 내용은 유출 위험 없이 웹브라우저 영토 내에 자가 저장되므로 완벽히 안전합니다.
           </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 text-xs font-bold">
-            {hasUserApiKey ? (
-              <button
-                type="button"
-                onClick={onStartSetup}
-                className="w-full sm:w-auto py-3.5 px-8 bg-white hover:bg-slate-100 text-slate-950 rounded transition cursor-pointer flex items-center justify-center gap-1 shadow"
-              >
-                <span>새로운 채용조건 설정하기</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={onOpenApiKeyModal}
-                className="w-full sm:w-auto py-3.5 px-8 bg-indigo-500 hover:bg-indigo-600 text-white rounded transition cursor-pointer flex items-center justify-center gap-1 shadow"
-              >
-                <span>🔑 API 키 등록하고 시작하기</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            )}
+          
+          <div className="flex flex-wrap items-center justify-center gap-3 pt-4">
+            <button
+              type="button"
+              onClick={onStartSetup}
+              className="bg-[#8ac43f] hover:bg-[#7cb337] text-white font-extrabold uppercase px-6 py-2.5 rounded text-xs transition duration-150 shadow cursor-pointer"
+            >
+              Start setup Now
+            </button>
             <button
               type="button"
               onClick={onQuickLoadSample}
-              className="w-full sm:w-auto py-3.5 px-8 bg-slate-900 hover:bg-slate-850 hover:text-white rounded transition border border-slate-800 text-slate-300 cursor-pointer flex items-center justify-center gap-1.5"
+              className="bg-white/10 hover:bg-white/20 text-white font-extrabold uppercase px-6 py-2.5 rounded text-xs transition border border-white/10 cursor-pointer"
             >
-              <Play className="w-3.5 h-3.5 text-white fill-white" />
-              <span>샘플로 1초 만에 실행하기</span>
+              Direct Load Demo
             </button>
           </div>
         </div>
