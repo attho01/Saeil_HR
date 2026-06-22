@@ -636,7 +636,7 @@ export default function CandidateForm({
                 className="hidden"
               />
               <div className="w-14 h-14 bg-white border border-slate-200 shadow-sm rounded-2xl flex items-center justify-center mx-auto text-slate-400 hover:text-indigo-600 transition-all">
-                <UploadCloud className="w-7 h-7 text-indigo-550" />
+                <UploadCloud className="w-7 h-7 text-indigo-500" />
               </div>
               <div className="space-y-1.5 px-4 animate-fade-in">
                 <p className="text-xs font-bold text-slate-800">
@@ -709,7 +709,7 @@ export default function CandidateForm({
                             </span>
                           )}
                           {fileItem.status === "processing" && (
-                            <span className="bg-indigo-55 bg-indigo-50 text-indigo-650 text-[9px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-1 font-sans animate-pulse">
+                            <span className="bg-indigo-50 text-indigo-600 text-[9px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-1 font-sans animate-pulse">
                               <Loader2 className="w-2.5 h-2.5 animate-spin text-indigo-600" />
                               정보 추출 중...
                             </span>

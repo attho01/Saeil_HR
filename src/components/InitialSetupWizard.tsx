@@ -429,7 +429,7 @@ export default function InitialSetupWizard({ centerInfo, onChange, onComplete }:
                       ? "bg-white text-slate-950 shadow-sm font-extrabold" 
                       : isPast 
                         ? "bg-slate-900 text-[#8ac43f] border border-[#8ac43f]/30 font-bold" 
-                        : "bg-slate-900 text-slate-550 border border-slate-800"
+                        : "bg-slate-900 text-slate-500 border border-slate-800"
                   }`}>
                     {isPast ? "✓" : item.num}
                   </span>
@@ -478,7 +478,7 @@ export default function InitialSetupWizard({ centerInfo, onChange, onComplete }:
                       value={region}
                       onChange={(e) => setRegion(e.target.value)}
                       placeholder="예시: 서울관악, 강원원주, 부산사하 등"
-                      className="w-full px-4 py-2.5 border border-slate-250 rounded-sm text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-slate-950"
+                      className="w-full px-4 py-2.5 border border-slate-250 rounded-sm bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-slate-950 placeholder-slate-400 font-sans"
                     />
                   </div>
 
@@ -489,7 +489,7 @@ export default function InitialSetupWizard({ centerInfo, onChange, onComplete }:
                       value={centerName}
                       onChange={(e) => setCenterName(e.target.value)}
                       placeholder="예시: 여성새로일하기센터"
-                      className="w-full px-4 py-2.5 border border-slate-250 rounded-sm text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-slate-950"
+                      className="w-full px-4 py-2.5 border border-slate-250 rounded-sm bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-slate-950 placeholder-slate-400 font-sans"
                     />
                   </div>
                 </div>
@@ -530,7 +530,7 @@ export default function InitialSetupWizard({ centerInfo, onChange, onComplete }:
                       value={jobTitle}
                       onChange={(e) => setJobTitle(e.target.value)}
                       placeholder="예시: 경력이동 기획 및 구인기업 전담 상담원"
-                      className="w-full px-4 py-2.5 border border-slate-250 rounded-sm text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-slate-950 font-medium"
+                      className="w-full px-4 py-2.5 border border-slate-250 rounded-sm bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-slate-950 font-medium placeholder-slate-400 font-sans"
                     />
                   </div>
                 </div>
@@ -584,7 +584,7 @@ export default function InitialSetupWizard({ centerInfo, onChange, onComplete }:
                     <div className="w-12 h-12 border-4 border-slate-200 border-t-slate-950 rounded-full animate-spin"></div>
                     <div className="text-center">
                       <p className="text-sm font-bold text-slate-800 animate-pulse">빅데이터 실시간 데이터 크롤링 및 인덱싱 처리 중</p>
-                      <p className="text-[11px] text-slate-650 mt-1 font-mono tracking-wide">{loadingStepText}</p>
+                      <p className="text-[11px] text-slate-500 mt-1 font-mono tracking-wide">{loadingStepText}</p>
                     </div>
                   </div>
                 )}
@@ -767,7 +767,7 @@ export default function InitialSetupWizard({ centerInfo, onChange, onComplete }:
                                 e.stopPropagation();
                                 handleDeleteCustomComp(item.name);
                               }}
-                              className="text-slate-400 hover:text-rose-650 transition p-1 hover:bg-slate-100 rounded-sm"
+                              className="text-slate-400 hover:text-rose-600 transition p-1 hover:bg-slate-100 rounded-sm"
                               title="삭제"
                             >
                               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -843,7 +843,7 @@ export default function InitialSetupWizard({ centerInfo, onChange, onComplete }:
                               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border flex items-center gap-1 ${
                                 isSelected
                                   ? "bg-slate-950 border-slate-950 text-white shadow-sm"
-                                  : "bg-slate-50 border-slate-200 text-slate-650 hover:bg-slate-100"
+                                  : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100"
                               }`}
                             >
                               {keyword}
@@ -858,7 +858,7 @@ export default function InitialSetupWizard({ centerInfo, onChange, onComplete }:
                                 }}
                                 className={`absolute -top-1.5 -right-1.5 rounded-full p-0.5 border ${
                                   isSelected 
-                                    ? "bg-rose-550 border-rose-600 text-white hover:bg-rose-650" 
+                                    ? "bg-rose-500 border-rose-600 text-white hover:bg-rose-600" 
                                     : "bg-slate-200 border-slate-300 text-slate-600 hover:bg-slate-300"
                                 } text-[8px] leading-none w-4 h-4 flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 shadow-sm`}
                                 title="삭제"
@@ -878,7 +878,7 @@ export default function InitialSetupWizard({ centerInfo, onChange, onComplete }:
                         value={customCivilInput}
                         onChange={(e) => setCustomCivilInput(e.target.value)}
                         placeholder="이 항목에 성격 키워드 개별 추가"
-                        className="flex-1 px-3 py-1.5 border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-slate-950 bg-white"
+                        className="flex-1 px-3 py-1.5 border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-slate-950 bg-white text-slate-800 placeholder-slate-400 font-sans"
                         onKeyDown={(e) => {
                           if (e.key === "Enter") {
                             e.preventDefault();
@@ -923,7 +923,7 @@ export default function InitialSetupWizard({ centerInfo, onChange, onComplete }:
                               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border flex items-center gap-1 ${
                                 isSelected
                                   ? "bg-slate-950 border-slate-950 text-white shadow-sm"
-                                  : "bg-slate-50 border-slate-200 text-slate-655 hover:bg-slate-100"
+                                  : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100"
                               }`}
                             >
                               {keyword}
@@ -938,7 +938,7 @@ export default function InitialSetupWizard({ centerInfo, onChange, onComplete }:
                                 }}
                                 className={`absolute -top-1.5 -right-1.5 rounded-full p-0.5 border ${
                                   isSelected 
-                                    ? "bg-rose-550 border-rose-600 text-white hover:bg-rose-650" 
+                                    ? "bg-rose-500 border-rose-600 text-white hover:bg-rose-600" 
                                     : "bg-slate-200 border-slate-300 text-slate-600 hover:bg-slate-300"
                                 } text-[8px] leading-none w-4 h-4 flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 shadow-sm`}
                                 title="삭제"
@@ -958,7 +958,7 @@ export default function InitialSetupWizard({ centerInfo, onChange, onComplete }:
                         value={customCultureInput}
                         onChange={(e) => setCustomCultureInput(e.target.value)}
                         placeholder="이 항목에 성격 키워드 개별 추가"
-                        className="flex-1 px-3 py-1.5 border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-slate-950 bg-white"
+                        className="flex-1 px-3 py-1.5 border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-slate-950 bg-white text-slate-800 placeholder-slate-400 font-sans"
                         onKeyDown={(e) => {
                           if (e.key === "Enter") {
                             e.preventDefault();

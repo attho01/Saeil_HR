@@ -953,7 +953,7 @@ ${input.planText || "미제출"}
             <AlertCircle className="w-4.5 h-4.5 text-amber-600 mt-0.5 shrink-0" />
             <div>
               <p className="font-bold text-amber-950 text-sm">⚠️ 공유 서버용 AI 모델 API 할당량 초과 안내</p>
-              <p className="mt-1 text-amber-850 leading-relaxed font-sans">
+              <p className="mt-1 text-amber-800 leading-relaxed font-sans">
                 현재 기본 시스템 탑재 공유 Gemini API의 할당량(RESOURCE_EXHAUSTED)이 초과되어, <strong>하이브리드 고정밀 오프라인 휴리스틱 채점 및 개인정보 블라인드 엔진</strong>으로 자동 하이브리드 전환되었습니다.<br />
                 구인구직 구글 실시간 검색 기반의 맞춤 역량 도정 및 지원서 실시간 OCR 파라메트릭 정밀 AI 인텍싱을 모두 무제한 가동하시려면 우측 상단 <strong>'Gemini API 키 등록'</strong> 단추를 클릭하여 본인의 API 키를 등록 보관해 주시면 즉각 자동 해결됩니다.
               </p>
@@ -1032,7 +1032,7 @@ ${input.planText || "미제출"}
             >
               {/* Error panel if any */}
               {errorMessage && (
-                <div className="p-4 bg-orange-50 border border-orange-200 rounded-sm flex items-start gap-3 text-xs text-orange-850 font-sans">
+                <div className="p-4 bg-orange-50 border border-orange-200 rounded-sm flex items-start gap-3 text-xs text-orange-800 font-sans">
                   <AlertCircle className="w-4.5 h-4.5 text-orange-600 mt-0.5 shrink-0" />
                   <div>
                     <p className="font-bold">평가 진행 중 일부 제한이 발생했습니다.</p>

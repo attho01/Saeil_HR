@@ -302,7 +302,7 @@ export default function CandidateDashboard({
             </span>
             <span className={`px-2 py-0.5 rounded-sm text-[9.5px] font-bold shrink-0 ${
               cand.tier === '적극검토' ? 'bg-[#8ac43f] text-black font-extrabold border border-[#8ac43f]/30' :
-              cand.tier === '검토(조건부)' ? 'bg-amber-500/25 text-amber-300 border border-amber-550/20' :
+              cand.tier === '검토(조건부)' ? 'bg-amber-500/25 text-amber-300 border border-amber-500/20' :
               'bg-slate-700/50 text-slate-300'
             }`}>
               {cand.tier}
