@@ -82,7 +82,7 @@ export default function ApiKeyModal({ isOpen, onClose, onSave, onClear }: ApiKey
 
       if (staticFallback) {
         console.log("Using direct client-side Gemini API verification fallback.");
-        const directRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey.trim()}`, {
+        const directRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey.trim()}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

@@ -244,7 +244,7 @@ export default function CandidateForm({
 { "name": "string", "resumeText": "string", "selfIntroText": "string", "planText": "string", "detectedPersonalInfo": "string" }
 `;
 
-                const directRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${userApiKey.trim()}`, {
+                const directRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${userApiKey.trim()}`, {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
                   body: JSON.stringify({
