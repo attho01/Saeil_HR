@@ -47,18 +47,59 @@ export default function ApiKeyModal({ isOpen, onClose, onSave, onClear }: ApiKey
     setStatusMsg({ type: null, text: "" });
 
     try {
-      const response = await fetch("/api/verify-key", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ apiKey: apiKey.trim() })
-      });
+      let data: any = null;
+      // Pre-detect static deployment platforms (like Vercel) where server-side routes are unavailable
+      const isStaticDeployment = !window.location.hostname.includes("run.app") && 
+                                 window.location.hostname !== "localhost" && 
+                                 window.location.hostname !== "127.0.0.1";
+      
+      let staticFallback = isStaticDeployment;
 
-      if (!response.ok) {
-        throw new Error("서버 검증 네트워크 오류가 발생했습니다.");
+      if (!staticFallback) {
+        try {
+          const response = await fetch("/api/verify-key", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ apiKey: apiKey.trim() })
+          });
+
+          if (response.status === 404) {
+            staticFallback = true;
+          } else if (!response.ok) {
+            staticFallback = true;
+          } else {
+            const contentType = response.headers.get("content-type") || "";
+            if (contentType.includes("application/json")) {
+              data = await response.json();
+            } else {
+              staticFallback = true;
+            }
+          }
+        } catch (err) {
+          staticFallback = true;
+        }
       }
 
-      const data = await response.json();
-      if (data.valid) {
+      if (staticFallback) {
+        console.log("Using direct client-side Gemini API verification fallback.");
+        const directRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey.trim()}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: "Hello" }] }]
+          })
+        });
+        
+        if (!directRes.ok) {
+          const errJson = await directRes.json().catch(() => ({}));
+          const errMsg = errJson?.error?.message || "유효하지 않은 API 키 또는 원격 에러 발생";
+          throw new Error(errMsg);
+        }
+        
+        data = { valid: true };
+      }
+
+      if (data && data.valid) {
         localStorage.setItem("user_gemini_api_key_v3.1", apiKey.trim());
         setSavedKey(apiKey.trim());
         onSave(apiKey.trim());
@@ -69,7 +110,7 @@ export default function ApiKeyModal({ isOpen, onClose, onSave, onClear }: ApiKey
       } else {
         setStatusMsg({
           type: "error",
-          text: data.error || "입력한 API 키 검증에 실패했습니다. 유효한 키인지 다시 확인하십시오."
+          text: (data && data.error) || "입력한 API 키 검증에 실패했습니다. 유효한 키인지 다시 확인하십시오."
         });
       }
     } catch (e: any) {
