@@ -74,8 +74,8 @@ export default function App() {
     if (saved) {
       return saved === "true";
     }
-    // Default to true for premium instant auto-start!
-    return true;
+    // Default to false so new users are guided through the wizard steps (job & personality configurations)
+    return false;
   });
 
   const [showLanding, setShowLanding] = useState<boolean>(true);
@@ -997,6 +997,7 @@ ${input.planText || "미제출"}
                 <CenterConfiguration 
                   centerInfo={centerInfo}
                   onChange={setCenterInfo}
+                  onReopenWizard={() => setIsSetupComplete(false)}
                 />
               </div>
 

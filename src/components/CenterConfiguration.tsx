@@ -1,10 +1,11 @@
 import React from "react";
 import { CenterInfo, JobType, WeightProfile } from "../types";
-import { Settings, Award, Users, AlignLeft } from "lucide-react";
+import { Settings, Award, Users, AlignLeft, Sparkles } from "lucide-react";
 
 interface CenterConfigurationProps {
   centerInfo: CenterInfo;
   onChange: (updated: CenterInfo) => void;
+  onReopenWizard?: () => void;
 }
 
 export const DEFAULT_PROFILES: Record<JobType, WeightProfile> = {
@@ -54,7 +55,7 @@ export const DEFAULT_PROFILES: Record<JobType, WeightProfile> = {
   }
 };
 
-export default function CenterConfiguration({ centerInfo, onChange }: CenterConfigurationProps) {
+export default function CenterConfiguration({ centerInfo, onChange, onReopenWizard }: CenterConfigurationProps) {
   
   const handleJobTypeChange = (type: JobType) => {
     // Standard v3.1 profile lookup
@@ -135,14 +136,26 @@ export default function CenterConfiguration({ centerInfo, onChange }: CenterConf
   return (
     <div className="bg-[#1f2226] rounded border border-white/10 shadow-lg overflow-hidden" id="center-config-card">
       <div className="p-6 bg-[#292e35] border-b border-white/10">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-[#8ac43f]/20 text-[#8ac43f] rounded">
-            <Settings className="w-5 h-5" id="settings-icon" />
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-[#8ac43f]/20 text-[#8ac43f] rounded">
+              <Settings className="w-5 h-5" id="settings-icon" />
+            </div>
+            <div>
+              <h2 className="font-sans font-semibold text-white text-lg leading-tight">새일센터 채용 기준 설정</h2>
+              <p className="text-xs text-slate-400 mt-0.5">센터 기본 정보와 직무 등급 가중치 프로파일 v3.1을 제어합니다.</p>
+            </div>
           </div>
-          <div>
-            <h2 className="font-sans font-semibold text-white text-lg leading-tight">새일센터 채용 기준 설정</h2>
-            <p className="text-xs text-slate-400 mt-0.5">센터 기본 정보와 직무 등급 가중치 프로파일 v3.1을 제어합니다.</p>
-          </div>
+          {onReopenWizard && (
+            <button
+              type="button"
+              onClick={onReopenWizard}
+              className="py-2 px-3.5 bg-[#8ac43f] hover:bg-[#7cb337] text-white font-sans text-xs font-bold rounded shadow transition-all flex items-center justify-center gap-1.5 cursor-pointer self-start sm:self-center"
+            >
+              <Sparkles className="w-3.5 h-3.5 fill-white text-white" />
+              <span>1차 직무역량 & 2차 인성 설정 마법사 실행</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -319,6 +332,84 @@ export default function CenterConfiguration({ centerInfo, onChange }: CenterConf
             </div>
           </div>
         )}
+
+        {/* 1차 및 2차 평가 세부 지표 리스트 */}
+        <div className="border-t border-white/10 pt-5 space-y-4">
+          <div className="flex justify-between items-center">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 font-sans">1차 및 2차 평가 설정 지표</h3>
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* 1차 핵심 직무역량 */}
+            <div className="p-4 bg-[#292e35] border border-white/10 rounded space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-xs font-bold text-slate-200 font-sans">1차 전형 직무수행평가 역량 (3~5개 필수)</span>
+                <span className="text-[10px] bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded font-extrabold font-sans">1차 직무수행</span>
+              </div>
+              <div className="space-y-2">
+                {centerInfo.requirements.coreCompetencies && centerInfo.requirements.coreCompetencies.length > 0 ? (
+                  centerInfo.requirements.coreCompetencies.map((comp) => {
+                    const desc = centerInfo.requirements.coreCompetencyDescriptions?.[comp] || "여성새일센터 직무 기본 표준 역량";
+                    const source = centerInfo.requirements.coreCompetencySources?.[comp];
+                    return (
+                      <div key={comp} className="p-2.5 bg-[#1f2226] border border-white/5 rounded">
+                        <div className="flex items-center justify-between gap-1.5 flex-wrap">
+                          <span className="text-xs font-extrabold text-[#8ac43f]">{comp}</span>
+                          {source && (
+                            <span className="text-[9.5px] font-mono text-slate-500 bg-[#292e35] px-1.5 py-0.5 rounded border border-white/5">
+                              근거: {source}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[11px] text-slate-400 leading-normal mt-1.5 font-sans">{desc}</p>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <p className="text-xs text-slate-500 italic font-sans py-4 text-center">도출되거나 직접 추가해둔 1차 직무역량이 없습니다.</p>
+                )}
+              </div>
+            </div>
+
+            {/* 2차 평가 인성역량 */}
+            <div className="p-4 bg-[#292e35] border border-white/10 rounded space-y-3 flex flex-col justify-between">
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs font-bold text-slate-200 font-sans">2차 전형 면접 / 조직적합도 인성 키워드</span>
+                  <span className="text-[10px] bg-indigo-500/15 text-indigo-400 border border-indigo-500/30 px-2 py-0.5 rounded font-extrabold font-sans">2차 인성면접</span>
+                </div>
+                <div className="flex flex-wrap gap-1.5 p-3 bg-[#1f2226] border border-white/5 rounded min-h-[90px] content-start">
+                  {centerInfo.requirements.personalityKeywords && centerInfo.requirements.personalityKeywords.length > 0 ? (
+                    centerInfo.requirements.personalityKeywords.map((kw) => (
+                      <span key={kw} className="px-2 py-0.5 bg-[#292e35] border border-white/10 text-slate-300 rounded text-xs font-semibold">
+                        {kw}
+                      </span>
+                    ))
+                  ) : (
+                    <p className="text-xs text-slate-500 italic font-sans py-4 w-full text-center">선정해둔 2차 인성역량 키워드가 없습니다.</p>
+                  )}
+                </div>
+              </div>
+              <div className="p-3 bg-[#1f2226] border border-white/5 rounded text-[11px] text-slate-400 leading-relaxed font-sans mt-2">
+                <span className="font-semibold block text-slate-200 mb-0.5">※ 우리 센터 인재상 및 조직 문화 한줄평:</span>
+                {centerInfo.requirements.orgCulture || "감정 회복탄력성이 풍부하며, 경직되지 않고 다른 부서와의 원활한 소통 능력을 지향"}
+              </div>
+            </div>
+          </div>
+
+          {onReopenWizard && (
+            <div className="flex justify-center pt-2">
+              <button
+                type="button"
+                onClick={onReopenWizard}
+                className="w-full py-2.5 bg-[#292e35] hover:bg-[#323942] text-slate-300 hover:text-white font-sans text-xs font-bold rounded border border-white/10 hover:border-white/20 shadow transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-[#8ac43f] fill-[#8ac43f]" />
+                <span>지표 설계 마법사 실행하여 1차 직무역량 및 2차 인성역량 상세 설계하기</span>
+              </button>
+            </div>
+          )}
+        </div>
 
         {/* Policy Bonus Rules & Requirements */}
         <div className="border-t border-white/5 pt-5 space-y-4">

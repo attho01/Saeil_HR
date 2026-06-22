@@ -414,21 +414,38 @@ export default function InitialSetupWizard({ centerInfo, onChange, onComplete }:
           </div>
           
           {/* Progress Indicators */}
-          <div className="flex items-center gap-2">
-            {[1, 2, 3].map((num) => (
-              <div key={num} className="flex items-center">
-                <span className={`w-6 h-6 rounded-none flex items-center justify-center text-xs font-bold font-mono transition-all ${
-                  step === num 
-                    ? "bg-white text-slate-950 shadow" 
-                    : step > num 
-                      ? "bg-slate-900 text-slate-300 border border-slate-850" 
-                      : "bg-slate-900 text-slate-650 border border-slate-850"
-                }`}>
-                  {num}
-                </span>
-                {num < 3 && <div className={`w-8 h-0.5 ${step > num ? "bg-white" : "bg-slate-800"}`} />}
-              </div>
-            ))}
+          <div className="flex items-center gap-2 font-sans">
+            {[
+              { num: 1, title: "1. 일반 정보" },
+              { num: 2, title: "2. 1차 직무역량" },
+              { num: 3, title: "3. 2차 인성역량" }
+            ].map((item) => {
+              const isActive = step === item.num;
+              const isPast = step > item.num;
+              return (
+                <div key={item.num} className="flex items-center gap-1.5">
+                  <span className={`w-5 h-5 rounded-sm flex items-center justify-center text-[10px] font-bold font-sans transition-all ${
+                    isActive 
+                      ? "bg-white text-slate-950 shadow-sm font-extrabold" 
+                      : isPast 
+                        ? "bg-slate-900 text-[#8ac43f] border border-[#8ac43f]/30 font-bold" 
+                        : "bg-slate-900 text-slate-550 border border-slate-800"
+                  }`}>
+                    {isPast ? "✓" : item.num}
+                  </span>
+                  <span className={`text-[11px] hidden sm:inline font-bold ${
+                    isActive 
+                      ? "text-white font-extrabold" 
+                      : isPast 
+                        ? "text-slate-300" 
+                        : "text-slate-500"
+                  }`}>
+                    {item.title}
+                  </span>
+                  {item.num < 3 && <div className={`w-3 h-0.5 ${step > item.num ? "bg-white/40" : "bg-slate-800"}`} />}
+                </div>
+              );
+            })}
           </div>
         </div>
 
